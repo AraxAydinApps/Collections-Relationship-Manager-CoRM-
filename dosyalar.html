@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoRM - Dosyalar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing:border-box; }
+    .chip { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#a1a1aa; }
+    .sel, .inp {
+      background:#111113; border:1px solid #27272a; color:#e4e4e7;
+      padding:10px 12px; border-radius:10px; font-size:13px; outline:none;
+    }
+    .sel:focus, .inp:focus { border-color:#52525b; }
+    .btn {
+      background:#e4e4e7; color:#09090b; border-radius:10px;
+      padding:10px 14px; font-weight:700; font-size:13px;
+    }
+    .btn2 {
+      background:#18181b; color:#e4e4e7; border:1px solid #27272a; border-radius:10px;
+      padding:10px 14px; font-weight:700; font-size:13px;
+    }
+    .card {
+      background:#121214; border:1px solid #27272a; border-radius:16px;
+      padding:18px; cursor:pointer; transition:transform .08s ease, border-color .2s ease;
+    }
+    .card:hover { transform: translateY(-1px); border-color:#3f3f46; }
+    .stageDot { width:10px; height:10px; border-radius:999px; display:inline-block; }
+    .s-ilk { background:#22c55e; }
+    .s-soz { background:#eab308; }
+    .s-bozuldu { background:#f97316; }
+    .s-cerceve { background:#dc2626; }
+    .s-x { background:#71717a; }
+    .muted { color:#a1a1aa; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .toggle { display:inline-flex; align-items:center; gap:10px; }
+    .switch { position:relative; width:44px; height:24px; background:#27272a; border:1px solid #3f3f46; border-radius:999px; cursor:pointer; }
+    .knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:999px; background:#a1a1aa; transition:left .18s ease, background .18s ease; }
+    .switch.on { background:#dc2626; border-color:#ef4444; }
+    .switch.on .knob { left:23px; background:#fff; }
+  </style>
+</head>
+<body class="h-full">
+  <div class="min-h-full w-full" style="background:#09090b;">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-3xl font-bold text-zinc-100">Dosyalar</h1>
+          <div id="who" class="text-sm text-zinc-400 mt-1">—</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btnLogout" class="btn2">Çıkış</button>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+
+          <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Aşama</div>
+            <select id="fStage" class="sel w-full">
+              <option value="">Tümü</option>
+              <option value="ilk">İlk Hatırlatma</option>
+              <option value="soz">Söz Alındı</option>
+              <option value="bozuldu">Söz Bozuldu</option>
+              <option value="cerceve">Çerçeve</option>
+              <option value="x">X Süreci</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Sorumlu</div>
+            <select id="fOwner" class="sel w-full">
+              <option value="">Tümü</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Söz Bozuldu</div>
+            <select id="fBroken" class="sel w-full">
+              <option value="">Tümü</option>
+              <option value="1">Evet</option>
+              <option value="0">Hayır</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Gecikmiş</div>
+            <div class="toggle">
+              <div id="tOverdue" class="switch"><div class="knob"></div></div>
+              <div class="text-sm text-zinc-400">Sadece gecikmiş</div>
+            </div>
+          </div>
+
+          <div class="md:col-span-3">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Arama</div>
+            <input id="fSearch" class="inp w-full" placeholder="Firma / kod / stage" />
+          </div>
+
+          <div class="md:col-span-1">
+            <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Sıralama</div>
+            <select id="fSort" class="sel w-full">
+              <option value="priority">Öncelik</option>
+              <option value="name">İsim</option>
+              <option value="balance">Bakiye</option>
+              <option value="overdue">Gecikmiş</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <div id="total" class="text-sm text-zinc-400">Toplam: —</div>
+          <div class="flex items-center gap-2">
+            <button id="btnNewCase" class="btn2">YENİ DOSYA</button>
+            <button id="btnNewCollector" class="btn2">YENİ TAHSİLATÇI</button>
+            <button id="btnRefresh" class="btn">Yenile</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-200 text-sm hidden"></div>
+
+    </div>
+  </div>
+
+<script>
+/** CONFIG */
+const WEBAPP_URL = "/api/corm";
+const DETAIL_PAGE = "/dosyadetayi.html";
+const SESSION_KEY = "corm_session";
+const COOKIE_NAME = "corm_session";
+
+/** STATE */
+let session = null;
+let allCases = [];
+
+/** DOM */
+const $ = (id) => document.getElementById(id);
+
+/** Toast */
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  setTimeout(()=>t.classList.add("hidden"), 2500);
+}
+
+/** Cookie helpers */
+function getCookie(name){
+  const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return m ? decodeURIComponent(m[2]) : null;
+}
+function delCookie(name){
+  document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.arazad.xyz; SameSite=Lax; Secure`;
+}
+
+/** Session */
+function loadSession(){
+  // 1) localStorage
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+
+  // 2) cookie (shared www/apex)
+  try {
+    const c = getCookie(COOKIE_NAME);
+    if (c) {
+      const obj = JSON.parse(c);
+      // repopulate localStorage for current host
+      localStorage.setItem(SESSION_KEY, JSON.stringify(obj));
+      return obj;
+    }
+  } catch {}
+
+  return null;
+}
+function clearSession(){
+  try { localStorage.removeItem(SESSION_KEY); } catch {}
+  delCookie(COOKIE_NAME);
+  session = null;
+}
+
+/** API */
+async function apiPost(payload){
+  const res = await fetch(WEBAPP_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return await res.json();
+}
+async function loadCases(){
+  const u = session.user;
+  const data = await apiPost({ action:"listCases", user_id:u.user_id, role:u.role, team:u.team, token: session.token });
+  if (!data.ok) throw new Error(data.error || "listCases failed");
+  allCases = data.cases || [];
+}
+
+/** UI utils */
+function stageLabel(stage){
+  const s = String(stage||"").toLowerCase();
+  if (s==="ilk") return "İlk Hatırlatma";
+  if (s==="soz") return "Söz Alındı";
+  if (s==="bozuldu") return "Söz Bozuldu";
+  if (s==="cerceve") return "Çerçeve";
+  if (s==="x") return "X Süreci";
+  return s || "-";
+}
+function stageDotClass(stage){
+  const s = String(stage||"").toLowerCase();
+  if (s==="ilk") return "s-ilk";
+  if (s==="soz") return "s-soz";
+  if (s==="bozuldu") return "s-bozuldu";
+  if (s==="cerceve") return "s-cerceve";
+  if (s==="x") return "s-x";
+  return "s-x";
+}
+function num(n){
+  const x = Number(n);
+  return Number.isFinite(x) ? x : 0;
+}
+function moneyTRY(n){
+  const v = num(n);
+  return v.toLocaleString("tr-TR") + " ₺";
+}
+function isOverdue(c){
+  return num(c.overdue_balance) < 0;
+}
+
+/** Filters */
+function buildOwnerFilter(){
+  const set = new Set(allCases.map(c => String(c.owner_user_id||"").trim()).filter(Boolean));
+  const sel = $("fOwner");
+  sel.innerHTML = `<option value="">Tümü</option>` + [...set].sort().map(x => `<option value="${x}">${x}</option>`).join("");
+}
+
+function applyFilters(){
+  const fStage = $("fStage").value.trim().toLowerCase();
+  const fOwner = $("fOwner").value.trim();
+  const fBroken = $("fBroken").value.trim();
+  const fSearch = $("fSearch").value.trim().toLowerCase();
+  const onlyOverdue = $("tOverdue").classList.contains("on");
+  const sort = $("fSort").value;
+
+  let list = [...allCases];
+
+  if (fStage) list = list.filter(c => String(c.stage||"").toLowerCase() === fStage);
+  if (fOwner) list = list.filter(c => String(c.owner_user_id||"") === fOwner);
+
+  if (fBroken === "1") list = list.filter(c => num(c.broken_promise_count) > 0);
+  if (fBroken === "0") list = list.filter(c => num(c.broken_promise_count) <= 0);
+
+  if (onlyOverdue) list = list.filter(c => isOverdue(c));
+
+  if (fSearch){
+    list = list.filter(c => {
+      const a = String(c.account_name||"").toLowerCase();
+      const b = String(c.account_code||"").toLowerCase();
+      const s = String(c.stage||"").toLowerCase();
+      return a.includes(fSearch) || b.includes(fSearch) || s.includes(fSearch);
+    });
+  }
+
+  if (sort === "name"){
+    list.sort((a,b)=> String(a.account_name||"").localeCompare(String(b.account_name||""),"tr"));
+  } else if (sort === "balance"){
+    list.sort((a,b)=> Math.abs(num(b.balance)) - Math.abs(num(a.balance)));
+  } else if (sort === "overdue"){
+    list.sort((a,b)=> Math.abs(num(b.overdue_balance)) - Math.abs(num(a.overdue_balance)));
+  } else {
+    const stageOrder = { cerceve:0, bozuldu:1, soz:2, ilk:3, x:4 };
+    list.sort((a,b)=>{
+      const ao = isOverdue(a)?0:1;
+      const bo = isOverdue(b)?0:1;
+      if (ao!==bo) return ao-bo;
+      const as = stageOrder[String(a.stage||"").toLowerCase()] ?? 99;
+      const bs = stageOrder[String(b.stage||"").toLowerCase()] ?? 99;
+      if (as!==bs) return as-bs;
+      return Math.abs(num(b.balance)) - Math.abs(num(a.balance));
+    });
+  }
+
+  $("total").textContent = "Toplam: " + list.length + " dosya";
+  renderCards(list);
+}
+
+function renderCards(list){
+  const grid = $("grid");
+  grid.innerHTML = "";
+
+  list.forEach(c => {
+    const overdue = isOverdue(c);
+    const ov = num(c.overdue_balance);
+
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-xl font-bold text-zinc-100">${c.account_name || "-"}</div>
+          <div class="text-sm text-zinc-400 mt-1">
+            <span class="mono">${c.account_code || "-"}</span>
+            <span class="mx-2">•</span>
+            <span class="inline-flex items-center gap-2">
+              <span class="stageDot ${stageDotClass(c.stage)}"></span>
+              <span>${stageLabel(c.stage)}</span>
+            </span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-lg font-bold ${overdue ? "text-rose-200" : "text-zinc-100"}">${moneyTRY(ov)}</div>
+          <div class="text-xs ${overdue ? "text-rose-300" : "text-zinc-500"}">${overdue ? "Gecikmiş" : "—"}</div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between text-sm">
+        <div class="text-zinc-400">
+          Promise: <span class="text-zinc-200 mono">${c.last_promise_date || "-"}</span>
+        </div>
+        <div class="text-zinc-400">
+          Erteleme: <span class="text-zinc-200 mono">${num(c.postpone_used)}/${num(c.postpone_limit)}</span>
+        </div>
+      </div>
+
+      ${c.lock_reason ? `<div class="mt-2 text-sm text-amber-300">Kilit: <span class="mono">${c.lock_reason}</span></div>` : ``}
+    `;
+
+    el.addEventListener("click", ()=> {
+      window.location.href = DETAIL_PAGE + "?case_id=" + encodeURIComponent(c.case_id);
+    });
+
+    grid.appendChild(el);
+  });
+}
+
+/** INIT */
+async function init(){
+  session = loadSession();
+  if (!session || !session.user || !session.token){
+    window.location.href = "/index.html";
+    return;
+  }
+
+  $("who").textContent = `${session.user.full_name} = ${session.user.role} • ${session.user.team}`;
+
+  $("btnLogout").addEventListener("click", ()=>{
+    clearSession();
+    window.location.href = "/index.html";
+  });
+
+  $("btnNewCase").addEventListener("click", ()=> toast("Yeni Dosya: MVP'de yakında."));
+  $("btnNewCollector").addEventListener("click", ()=> toast("Yeni Tahsilatçı: MVP'de yakında."));
+
+  $("btnRefresh").addEventListener("click", async ()=>{
+    try {
+      await loadCases();
+      buildOwnerFilter();
+      applyFilters();
+      toast("Yenilendi");
+    } catch(e){
+      alert("Hata: " + (e.message || e));
+    }
+  });
+
+  $("fStage").addEventListener("change", applyFilters);
+  $("fOwner").addEventListener("change", applyFilters);
+  $("fBroken").addEventListener("change", applyFilters);
+  $("fSort").addEventListener("change", applyFilters);
+  $("fSearch").addEventListener("input", applyFilters);
+
+  $("tOverdue").addEventListener("click", ()=>{
+    $("tOverdue").classList.toggle("on");
+    applyFilters();
+  });
+
+  try {
+    await loadCases();
+    buildOwnerFilter();
+    applyFilters();
+  } catch (e){
+    // اگر API خطا داد، اینجا لاگین را پاک نمی‌کنیم
+    alert("Hata: " + (e.message || e));
+  }
+}
+init();
+</script>
+</body>
+</html>

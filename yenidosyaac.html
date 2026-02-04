@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoRM - Yeni Dosya Aç</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    .font-heading {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .font-body {
+      font-family: 'Work Sans', sans-serif;
+    }
+    
+    /* Card styles */
+    .detail-card {
+      background-color: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 24px;
+    }
+    
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #71717a;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #27272a;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Form styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #a1a1aa;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .required-mark {
+      color: #fca5a5;
+      font-size: 12px;
+    }
+    
+    .form-input, .form-select {
+      width: 100%;
+      background-color: #0f0f10;
+      border: 1px solid #27272a;
+      color: #e4e4e7;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Work Sans', sans-serif;
+    }
+    
+    .form-input:focus, .form-select:focus {
+      border-color: #52525b;
+    }
+    
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+    
+    .form-textarea {
+      width: 100%;
+      background-color: #0f0f10;
+      border: 1px solid #27272a;
+      color: #e4e4e7;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Work Sans', sans-serif;
+      resize: vertical;
+      min-height: 70px;
+    }
+    
+    .form-textarea:focus {
+      border-color: #52525b;
+    }
+    
+    /* Lock icon */
+    .lock-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background-color: #3f3f46;
+      border-radius: 3px;
+    }
+    
+    .lock-warning {
+      display: flex;
+      align-items: start;
+      gap: 10px;
+      padding: 10px 12px;
+      background-color: rgba(234, 179, 8, 0.1);
+      border-left: 3px solid #eab308;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #fde047;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+    
+    /* Tag chips */
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      background-color: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #a1a1aa;
+      font-weight: 600;
+      text-transform: lowercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tag-chip:hover {
+      background-color: #3f3f46;
+      border-color: #52525b;
+    }
+    
+    .tag-chip.selected {
+      background-color: #3f3f46;
+      border-color: #71717a;
+      color: #e4e4e7;
+    }
+    
+    /* Stage badges */
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    
+    .stage-ilk { background-color: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .stage-soz { background-color: rgba(234, 179, 8, 0.15); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .stage-bozuldu { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
+    .stage-cerceve { background-color: rgba(220, 38, 38, 0.15); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.3); }
+    .stage-x { background-color: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3); }
+    
+    /* Preview values */
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #27272a;
+    }
+    
+    .preview-row:last-child {
+      border-bottom: none;
+    }
+    
+    .preview-label {
+      font-size: 10px;
+      color: #71717a;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+    }
+    
+    .preview-value {
+      font-size: 13px;
+      color: #e4e4e7;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .preview-value.negative {
+      color: #fca5a5;
+    }
+    
+    /* Rules panel */
+    .rules-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .rules-list li {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background-color: #0f0f10;
+      border-left: 3px solid #3f3f46;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #a1a1aa;
+      line-height: 1.5;
+    }
+    
+    .rules-list li:nth-child(1) {
+      border-left-color: #eab308;
+    }
+    
+    .rules-list li:nth-child(3) {
+      border-left-color: #f97316;
+    }
+    
+    .rules-list li:nth-child(4) {
+      border-left-color: #dc2626;
+    }
+    
+    .rules-list li:nth-child(5) {
+      border-left-color: #71717a;
+    }
+    
+    /* Buttons */
+    .btn-cancel {
+      background-color: #27272a;
+      border: 1px solid #3f3f46;
+      color: #e4e4e7;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-cancel:hover {
+      background-color: #3f3f46;
+      border-color: #52525b;
+    }
+    
+    .btn-primary {
+      background-color: #52525b;
+      border: 1px solid #71717a;
+      color: #e4e4e7;
+      padding: 12px 32px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+      background-color: #71717a;
+      border-color: #a1a1aa;
+    }
+    
+    .btn-hint {
+      font-size: 10px;
+      color: #71717a;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0.3px;
+      margin-top: 4px;
+    }
+    
+    /* Conditional fields */
+    .conditional-fields {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    
+    .conditional-fields.show {
+      max-height: 200px;
+      margin-top: 16px;
+    }
+    
+    /* Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #18181b;
+    }
+    
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 3px;
+    }
+    
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #52525b;
+    }
+  </style>
+</head>
+<body class="h-full font-body">
+  <div id="app-container" class="h-full w-full overflow-auto" style="background-color: #09090b;">
+    
+    <!-- Header Bar -->
+    <header class="border-b" style="background-color: #18181b; border-color: #27272a;">
+      <div class="px-6 py-4 flex items-center justify-between">
+        
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none"/>
+              <rect x="18" y="2" width="12" height="12" stroke="#e4e4e7" stroke-width="1.5" fill="#e4e4e7"/>
+              <rect x="2" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none"/>
+              <rect x="18" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-heading text-base font-bold tracking-tight text-zinc-100">CoRM</div>
+            <div class="text-xs text-zinc-600 tracking-wider">Tahsilatta Netlik ve Disiplin</div>
+          </div>
+        </div>
+        
+        <!-- Center Title -->
+        <div class="absolute left-1/2 -translate-x-1/2 text-center">
+          <h1 id="page-title" class="font-heading text-lg font-bold tracking-wide text-zinc-300">
+            YENİ DOSYA AÇ
+          </h1>
+          <p id="page-subtitle" class="text-xs text-zinc-500 tracking-wide mt-1">
+            Tahsilat dosyası oluştur ve sorumlu ata
+          </p>
+        </div>
+        
+        <!-- Right Info -->
+        <div class="flex items-center gap-5">
+          <div class="text-right">
+            <div class="text-xs text-zinc-500 font-heading">03.02.2026</div>
+          </div>
+          <div class="h-8 w-px bg-zinc-700"></div>
+          <div class="text-right">
+            <div id="user-name" class="text-sm font-medium text-zinc-300">Mehmet K.</div>
+            <div id="user-role" class="text-xs text-zinc-500">Tahsilat Uzmanı</div>
+          </div>
+          <div class="h-8 w-px bg-zinc-700"></div>
+          <button class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors uppercase tracking-wider font-semibold">
+            Çıkış
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="flex h-[calc(100%-73px)]">
+      
+      <!-- LEFT COLUMN (65%) - Form -->
+      <section class="w-[65%] p-6 overflow-y-auto custom-scroll">
+        
+        <form id="new-case-form" class="space-y-6">
+          
+          <!-- Customer Info Card -->
+          <div class="detail-card">
+            <div class="section-title">Müşteri Bilgileri</div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">
+                  Firma/Kişi Adı
+                  <span class="required-mark">*</span>
+                </label>
+                <input type="text" class="form-input" id="company-name" placeholder="Örn: Yıldız Makina Ltd. Şti." required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">
+                  Hesap Kodu
+                  <span class="required-mark">*</span>
+                </label>
+                <input type="text" class="form-input" id="account-code" placeholder="Örn: 120.01.001" required>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">Tip Kodu</label>
+                <input type="text" class="form-input" id="type-code" placeholder="Örn: MÜŞ-001">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Grup Kodu</label>
+                <input type="text" class="form-input" id="group-code" placeholder="Örn: A-SANAYİ">
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">E-Posta</label>
+                <input type="email" class="form-input" id="email" placeholder="ornek@sirket.com">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Telefon</label>
+                <input type="tel" class="form-input" id="phone" placeholder="+90 212 555 0000">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Financial Info Card -->
+          <div class="detail-card">
+            <div class="section-title">Finansal Özet</div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">
+                  Bakiye (₺)
+                  <span class="required-mark">*</span>
+                </label>
+                <input type="number" class="form-input" id="balance" placeholder="0" step="0.01" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">
+                  Geciken Bakiye (₺)
+                  <span class="required-mark">*</span>
+                </label>
+                <input type="number" class="form-input" id="overdue-balance" placeholder="0" step="0.01" required>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">Borç Tutar (₺)</label>
+                <input type="number" class="form-input" id="debt" placeholder="0" step="0.01">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Alacak Tutar (₺)</label>
+                <input type="number" class="form-input" id="receivable" placeholder="0" step="0.01">
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">Son Tahsilat Tarihi</label>
+                <input type="date" class="form-input" id="last-collection-date">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Son Tahsilat Tutarı (₺)</label>
+                <input type="number" class="form-input" id="last-collection-amount" placeholder="0" step="0.01">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Stage Selection Card -->
+          <div class="detail-card">
+            <div class="section-title">Dosya Aşaması</div>
+            
+            <div class="form-group">
+              <label class="form-label">
+                Aşama
+                <span class="required-mark">*</span>
+              </label>
+              <select class="form-select" id="stage" required>
+                <option value="">Seçiniz</option>
+                <option value="ilk">Yeni kayd</option>
+                <option value="ilk">İlk Hatırlatma</option>
+                <option value="soz">Söz Alındı</option>
+                <option value="bozuldu">Söz Bozuldu</option>
+                <option value="cerceve">Çerçeve Konuşması</option>
+                <option value="x">X Süreci</option>
+              </select>
+            </div>
+            
+            <!-- Conditional fields for "Söz Alındı" -->
+            <div class="conditional-fields" id="promise-fields">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label">
+                    Söz Tarihi
+                    <span class="required-mark">*</span>
+                  </label>
+                  <input type="date" class="form-input" id="promise-date">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">
+                    Söz Tutarı (₺)
+                    <span class="required-mark">*</span>
+                  </label>
+                  <input type="number" class="form-input" id="promise-amount" placeholder="0" step="0.01">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Responsible Assignment Card -->
+          <div class="detail-card">
+            <div class="section-title">Sorumlu Atama</div>
+            
+            <div class="form-group">
+              <label class="form-label">
+                Sorumlu Kişi
+                <span class="required-mark">*</span>
+                <span class="lock-icon">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 4.5H2.5C2.22386 4.5 2 4.72386 2 5V8C2 8.27614 2.22386 8.5 2.5 8.5H7.5C7.77614 8.5 8 8.27614 8 8V5C8 4.72386 7.77614 4.5 7.5 4.5Z" stroke="#71717a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3.5 4.5V3C3.5 2.60218 3.65804 2.22064 3.93934 1.93934C4.22064 1.65804 4.60218 1.5 5 1.5C5.39782 1.5 5.77936 1.65804 6.06066 1.93934C6.34196 2.22064 6.5 2.60218 6.5 3V4.5" stroke="#71717a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </label>
+              <select class="form-select" id="responsible" required>
+                <option value="">Seçiniz</option>
+                <option value="mehmet">Mehmet K.</option>
+                <option value="zeynep">Zeynep A.</option>
+                <option value="ali">Ali Y.</option>
+                <option value="ayse">Ayşe D.</option>
+                <option value="can">Can B.</option>
+              </select>
+            </div>
+            
+            <div class="lock-warning">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 1.5C4.41 1.5 1.5 4.41 1.5 8C1.5 11.59 4.41 14.5 8 14.5C11.59 14.5 14.5 11.59 14.5 8C14.5 4.41 11.59 1.5 8 1.5ZM8 11C7.725 11 7.5 10.775 7.5 10.5V7.5C7.5 7.225 7.725 7 8 7C8.275 7 8.5 7.225 8.5 7.5V10.5C8.5 10.775 8.275 11 8 11ZM8.5 6H7.5V5H8.5V6Z" fill="#fde047"/>
+              </svg>
+              <div>
+                <strong>Önemli:</strong> Dosya açıldıktan sonra sorumlu değiştirilemez (kilitli). İkinci kişi el koyamaz.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Customer Type Tags Card -->
+          <div class="detail-card">
+            <div class="section-title">Müşteri Tipi</div>
+            
+            <div class="form-group">
+              <label class="form-label">Etiketler (İsteğe Bağlı)</label>
+              <div class="tag-chips">
+                <div class="tag-chip" data-tag="oyalayici">oyalayıcı</div>
+                <div class="tag-chip" data-tag="sikisik">sıkışık</div>
+                <div class="tag-chip" data-tag="niyetli">niyetli</div>
+                <div class="tag-chip" data-tag="kararsiz">kararsız</div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Konuşma Tonu / Notlar</label>
+              <textarea class="form-textarea" id="notes" placeholder="İlk görüşme notlarınızı buraya yazın..."></textarea>
+            </div>
+          </div>
+          
+        </form>
+        
+      </section>
+      
+      <!-- RIGHT COLUMN (35%) - Preview & Rules -->
+      <aside class="w-[35%] p-6 space-y-5 overflow-y-auto custom-scroll border-l" style="border-color: #27272a;">
+        
+        <!-- Live Preview Card -->
+        <div class="detail-card">
+          <div class="section-title">Özet</div>
+          
+          <div class="space-y-3">
+            <div class="preview-row">
+              <div class="preview-label">Firma/Kişi</div>
+              <div class="preview-value" id="preview-company">-</div>
+            </div>
+            
+            <div class="preview-row">
+              <div class="preview-label">Aşama</div>
+              <div id="preview-stage">
+                <span class="stage-badge stage-ilk" id="preview-stage-badge">-</span>
+              </div>
+            </div>
+            
+            <div class="preview-row">
+              <div class="preview-label">Sorumlu</div>
+              <div class="preview-value" id="preview-responsible">-</div>
+            </div>
+            
+            <div class="preview-row">
+              <div class="preview-label">Bakiye</div>
+              <div class="preview-value negative" id="preview-balance">₺0</div>
+            </div>
+            
+            <div class="preview-row">
+              <div class="preview-label">Geciken Bakiye</div>
+              <div class="preview-value negative" id="preview-overdue">₺0</div>
+            </div>
+            
+            <div class="preview-row">
+              <div class="preview-label">Açılış Tarihi</div>
+              <div class="preview-value">Bugün</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Rules Panel -->
+        <div class="detail-card">
+          <div class="section-title">Sistem Kurall

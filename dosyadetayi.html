@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CoRM - Dosya Detayı</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-zinc-950 text-zinc-100">
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <a href="/dosyalar.html" class="text-sm text-zinc-400 hover:text-zinc-200">← Dosyalar</a>
+        <div id="title" class="text-2xl font-bold mt-1">Dosya</div>
+        <div id="subtitle" class="text-sm text-zinc-400 mt-1"></div>
+      </div>
+      <button id="logout" class="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm">Çıkış</button>
+    </div>
+
+    <div id="banner" class="mt-4 hidden rounded-xl border border-amber-900/40 bg-amber-950/30 p-4 text-amber-200 text-sm"></div>
+
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Case card -->
+      <div class="lg:col-span-1 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <div class="text-sm text-zinc-400">Firma</div>
+        <div id="company" class="text-lg font-semibold mt-1">-</div>
+        <div id="meta" class="text-xs text-zinc-400 mt-2">-</div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div class="rounded-lg bg-zinc-950 border border-zinc-800 p-3">
+            <div class="text-xs text-zinc-500">Gecikmiş</div>
+            <div id="overdue" class="font-semibold mt-1">-</div>
+          </div>
+          <div class="rounded-lg bg-zinc-950 border border-zinc-800 p-3">
+            <div class="text-xs text-zinc-500">Bakiye</div>
+            <div id="balance" class="font-semibold mt-1">-</div>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div class="rounded-lg bg-zinc-950 border border-zinc-800 p-3">
+            <div class="text-xs text-zinc-500">Promise</div>
+            <div id="promise" class="font-semibold mt-1">-</div>
+          </div>
+          <div class="rounded-lg bg-zinc-950 border border-zinc-800 p-3">
+            <div class="text-xs text-zinc-500">Erteleme</div>
+            <div id="postpone" class="font-semibold mt-1">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="lg:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <div class="text-lg font-semibold">İşlem Ekle</div>
+        <div id="ruleHint" class="text-xs text-zinc-400 mt-1">Kısıtlar backend tarafından uygulanır.</div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Promise -->
+          <div class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <div class="font-semibold">🟡 Söz (Promise)</div>
+            <div class="mt-3 space-y-2">
+              <input id="p_date" type="date" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="p_amount" type="number" placeholder="Tutar (TRY)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="p_channel" placeholder="Kanal (call/whatsapp/mail)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="p_note" placeholder="Not" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <button id="btnPromise" class="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-900 font-semibold hover:bg-white">Kaydet</button>
+            </div>
+          </div>
+
+          <!-- Postpone -->
+          <div class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <div class="font-semibold">🟠 Erteleme (Postpone)</div>
+            <div class="mt-3 space-y-2">
+              <input id="pp_date" type="date" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pp_reason" placeholder="Reason (ör: nakit akışı)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pp_channel" placeholder="Kanal (call/whatsapp/mail)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pp_note" placeholder="Ek not" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <button id="btnPostpone" class="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-900 font-semibold hover:bg-white">Kaydet</button>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <div class="font-semibold">💳 Ödeme (Payment)</div>
+            <div class="mt-3 space-y-2">
+              <input id="pay_amount" type="number" placeholder="Tutar (TRY)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pay_type" placeholder="Payment type (Havale/K.Kartı...)" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pay_channel" placeholder="Kanal" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <input id="pay_note" placeholder="Not" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <button id="btnPayment" class="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-900 font-semibold hover:bg-white">Kaydet</button>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <div class="font-semibold">📝 Not</div>
+            <div class="mt-3 space-y-2">
+              <input id="n_channel" placeholder="Kanal" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600">
+              <textarea id="n_note" rows="4" placeholder="Not" class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 outline-none focus:border-zinc-600"></textarea>
+              <button id="btnNote" class="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-900 font-semibold hover:bg-white">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="mt-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-semibold">Timeline</div>
+        <button id="refresh" class="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm">Yenile</button>
+      </div>
+
+      <div class="mt-4 overflow-auto">
+        <table class="w-full text-sm">
+          <thead class="text-zinc-400">
+            <tr class="border-b border-zinc-800">
+              <th class="text-left py-2 pr-3">Tarih</th>
+              <th class="text-left py-2 pr-3">Type</th>
+              <th class="text-left py-2 pr-3">Kim</th>
+              <th class="text-left py-2 pr-3">Kanal</th>
+              <th class="text-left py-2 pr-3">Not</th>
+              <th class="text-left py-2 pr-3">Tutar</th>
+              <th class="text-left py-2 pr-3">Promise Date</th>
+              <th class="text-left py-2 pr-3">Flag</th>
+            </tr>
+          </thead>
+          <tbody id="timeline" class="text-zinc-200"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function forceWww(){
+  if (location.hostname === "arazad.xyz") {
+    location.replace("https://www.arazad.xyz" + location.pathname + location.search + location.hash);
+  }
+})();
+
+const WEBAPP_URL = "/api/corm";
+
+    function getSession(){
+      const u = localStorage.getItem('corm_user');
+      const t = localStorage.getItem('corm_token');
+      if(!u || !t) return null;
+      try { return { user: JSON.parse(u), token: t }; } catch { return null; }
+    }
+
+    function logout(){
+      localStorage.removeItem('corm_user');
+      localStorage.removeItem('corm_token');
+      window.location.href = '/index.html';
+    }
+
+    async function apiForm(payload){
+      const params = new URLSearchParams();
+      Object.keys(payload).forEach(k => params.set(k, payload[k]));
+      const res = await fetch(WEBAPP_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+        body: params.toString()
+      });
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { throw new Error('JSON değil: ' + text.slice(0,120)); }
+    }
+
+    function fmtTRY(n){
+      const x = Number(n);
+      if(!Number.isFinite(x)) return '-';
+      return x.toLocaleString('tr-TR') + ' ₺';
+    }
+
+    function stageLabel(s){
+      const m = {
+        'ilk':'🟢 İlk Hatırlatma',
+        'soz':'🟡 Söz Alındı',
+        'bozuldu':'🟠 Söz Bozuldu',<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoRM - Dosya Detayı</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing:border-box; }
+    .card { background:#121214; border:1px solid #27272a; border-radius:16px; padding:18px; }
+    .btn2 { background:#18181b; color:#e4e4e7; border:1px solid #27272a; border-radius:10px; padding:10px 14px; font-weight:700; font-size:13px; }
+    .btn { background:#e4e4e7; color:#09090b; border-radius:10px; padding:10px 14px; font-weight:800; font-size:13px; }
+    .inp, .sel { background:#0f0f10; border:1px solid #27272a; color:#e4e4e7; padding:10px 12px; border-radius:10px; font-size:13px; outline:none; }
+    .inp:focus, .sel:focus { border-color:#52525b; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .row { border-top:1px solid #27272a; padding-top:10px; margin-top:10px; }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #27272a; background:#0f0f10; color:#e4e4e7; font-size:12px; }
+    .dot { width:10px; height:10px; border-radius:999px; display:inline-block; }
+    .s-ilk { background:#22c55e; } .s-soz { background:#eab308; } .s-bozuldu { background:#f97316; } .s-cerceve { background:#dc2626; } .s-x { background:#71717a; }
+  </style>
+</head>
+<body class="h-full">
+  <div class="min-h-full w-full" style="background:#09090b;">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-3xl font-bold text-zinc-100">Dosya Detayı</h1>
+          <div id="sub" class="text-sm text-zinc-400 mt-1">—</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnBack" class="btn2">← Dosyalar</button>
+          <button id="btnLogout" class="btn2">Çıkış</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Case summary -->
+        <div class="lg:col-span-2 card">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div id="name" class="text-2xl font-bold text-zinc-100">—</div>
+              <div class="text-zinc-400 mt-1"><span id="code" class="mono">—</span></div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Gecikmiş</div>
+              <div id="overdue" class="text-xl font-bold text-rose-200 mono">—</div>
+            </div>
+          </div>
+
+          <div class="row grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Aşama</div>
+              <div id="stage" class="mt-2 pill">—</div>
+            </div>
+            <div>
+              <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Promise</div>
+              <div id="promise" class="mt-2 text-zinc-100 mono">—</div>
+            </div>
+            <div>
+              <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Erteleme</div>
+              <div id="postpone" class="mt-2 text-zinc-100 mono">—</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold mb-2">Timeline</div>
+            <div id="timeline" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold mb-3">Aksiyon</div>
+
+          <div class="space-y-3">
+            <button id="btnPromise" class="btn w-full">SÖZ GİR</button>
+            <button id="btnPostpone" class="btn2 w-full">ERTELE</button>
+            <button id="btnPayment" class="btn2 w-full">ÖDEME</button>
+            <button id="btnNote" class="btn2 w-full">NOT</button>
+          </div>
+
+          <div class="row">
+            <div id="formArea" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyl-N86X-NWAzt7fPjX-BUl_DXw09LvGAvuBQDryKcW18G-bKr8Zrhpd0YuQGmUJwVW/exec";
+
+let session = null;
+let caseId = null;
+let caseData = null;
+let timeline = [];
+
+const $ = (id)=>document.getElementById(id);
+function loadSession(){
+  try { return JSON.parse(localStorage.getItem("corm_session")||"null"); } catch { return null; }
+}
+function clearSession(){ localStorage.removeItem("corm_session"); }
+function q(name){ return new URLSearchParams(location.search).get(name); }
+function num(n){ const x=Number(n); return Number.isFinite(x)?x:0; }
+function moneyTRY(n){ return num(n).toLocaleString("tr-TR")+" ₺"; }
+function stageLabel(stage){
+  const s=String(stage||"").toLowerCase();
+  if(s==="ilk") return "İlk Hatırlatma";
+  if(s==="soz") return "Söz Alındı";
+  if(s==="bozuldu") return "Söz Bozuldu";
+  if(s==="cerceve") return "Çerçeve";
+  if(s==="x") return "X Süreci";
+  return s||"-";
+}
+function stageDotClass(stage){
+  const s=String(stage||"").toLowerCase();
+  if(s==="ilk") return "s-ilk";
+  if(s==="soz") return "s-soz";
+  if(s==="bozuldu") return "s-bozuldu";
+  if(s==="cerceve") return "s-cerceve";
+  return "s-x";
+}
+async function apiPost(payload){
+  const res = await fetch(WEBAPP_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  return await res.json();
+}
+
+async function loadDetail(){
+  const u = session.user;
+  const data = await apiPost({ action:"getCaseDetail", user_id:u.user_id, role:u.role, team:u.team, token: session.token, case_id: caseId });
+  if(!data.ok) throw new Error(data.error || "getCaseDetail failed");
+  caseData = data.case;
+  timeline = data.timeline || [];
+  render();
+}
+
+function render(){
+  $("sub").textContent = `${session.user.full_name} • ${session.user.role} • ${session.user.team} • case_id=${caseId}`;
+  $("name").textContent = caseData.account_name || "-";
+  $("code").textContent = caseData.account_code || "-";
+  $("overdue").textContent = moneyTRY(caseData.overdue_balance || 0);
+
+  $("stage").innerHTML = `<span class="dot ${stageDotClass(caseData.stage)}"></span><span>${stageLabel(caseData.stage)}</span>`;
+  $("promise").textContent = caseData.last_promise_date ? (caseData.last_promise_date + " / " + moneyTRY(caseData.promise_amount||0)) : "-";
+  $("postpone").textContent = `${num(caseData.postpone_used)}/${num(caseData.postpone_limit)}` + (caseData.lock_reason ? (" • kilit: "+caseData.lock_reason) : "");
+
+  const tl = $("timeline");
+  tl.innerHTML = "";
+  if(!timeline.length){
+    tl.innerHTML = `<div class="text-sm text-zinc-500">Timeline yok</div>`;
+    return;
+  }
+  timeline.slice().reverse().forEach(a=>{
+    const line = document.createElement("div");
+    line.className = "rounded-xl border border-zinc-800 bg-zinc-950/30 p-3";
+    line.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="text-sm text-zinc-100 font-semibold">${a.action_type}</div>
+        <div class="text-xs text-zinc-500 mono">${a.action_date_time || ""}</div>
+      </div>
+      <div class="text-sm text-zinc-400 mt-1">${(a.note||"").replace(/</g,"&lt;")}</div>
+      <div class="text-xs text-zinc-500 mt-2">
+        by <span class="mono">${a.created_by_user_id||""}</span>
+        ${a.amount!=="" ? ` • amount: <span class="mono">${moneyTRY(a.amount)}</span>` : ``}
+        ${a.promise_date ? ` • date: <span class="mono">${a.promise_date}</span>` : ``}
+        ${a.system_flag ? ` • <span class="mono">${a.system_flag}</span>` : ``}
+      </div>
+    `;
+    tl.appendChild(line);
+  });
+}
+
+function showForm(html){
+  $("formArea").innerHTML = html;
+}
+
+function wireActions(){
+  $("btnPromise").addEventListener("click", ()=>{
+    showForm(`
+      <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Söz Gir</div>
+      <input id="pDate" class="inp w-full" type="date" />
+      <input id="pAmount" class="inp w-full" type="number" placeholder="Tutar" />
+      <select id="pChannel" class="sel w-full">
+        <option value="call">call</option>
+        <option value="whatsapp">whatsapp</option>
+        <option value="mail">mail</option>
+      </select>
+      <input id="pNote" class="inp w-full" placeholder="Not" />
+      <button id="pSend" class="btn w-full">Kaydet</button>
+    `);
+    $("pSend").addEventListener("click", async ()=>{
+      const u=session.user;
+      const payload = {
+        action:"createPromise",
+        user_id:u.user_id, role:u.role, team:u.team, token: session.token,
+        case_id: caseId,
+        promise_date: $("pDate").value,
+        amount: Number($("pAmount").value||0),
+        channel: $("pChannel").value,
+        note: $("pNote").value
+      };
+      const r=await apiPost(payload);
+      if(!r.ok) return alert(r.error||"Hata");
+      showForm(`<div class="text-sm text-emerald-300">Kaydedildi ✅</div>`);
+      await loadDetail();
+    });
+  });
+
+  $("btnPostpone").addEventListener("click", ()=>{
+    showForm(`
+      <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Ertele</div>
+      <input id="eDate" class="inp w-full" type="date" />
+      <select id="eChannel" class="sel w-full">
+        <option value="call">call</option>
+        <option value="whatsapp">whatsapp</option>
+        <option value="mail">mail</option>
+      </select>
+      <input id="eReason" class="inp w-full" placeholder="Reason (opsiyonel)" />
+      <input id="eNote" class="inp w-full" placeholder="Not" />
+      <button id="eSend" class="btn w-full">Kaydet</button>
+    `);
+    $("eSend").addEventListener("click", async ()=>{
+      const u=session.user;
+      const payload = {
+        action:"createPostpone",
+        user_id:u.user_id, role:u.role, team:u.team, token: session.token,
+        case_id: caseId,
+        new_date: $("eDate").value,
+        channel: $("eChannel").value,
+        reason: $("eReason").value,
+        note: $("eNote").value
+      };
+      const r=await apiPost(payload);
+      if(!r.ok) return alert(r.error||"Hata");
+      showForm(`<div class="text-sm text-emerald-300">Kaydedildi ✅</div>`);
+      await loadDetail();
+    });
+  });
+
+  $("btnPayment").addEventListener("click", ()=>{
+    showForm(`
+      <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Ödeme</div>
+      <input id="oAmount" class="inp w-full" type="number" placeholder="Tutar" />
+      <select id="oType" class="sel w-full">
+        <option value="BANK TRANSFER">BANK TRANSFER</option>
+        <option value="CREDIT CARD">CREDIT CARD</option>
+        <option value="CASH">CASH</option>
+      </select>
+      <select id="oChannel" class="sel w-full">
+        <option value="call">call</option>
+        <option value="whatsapp">whatsapp</option>
+        <option value="mail">mail</option>
+      </select>
+      <input id="oNote" class="inp w-full" placeholder="Not" />
+      <button id="oSend" class="btn w-full">Kaydet</button>
+    `);
+    $("oSend").addEventListener("click", async ()=>{
+      const u=session.user;
+      const payload = {
+        action:"createPayment",
+        user_id:u.user_id, role:u.role, team:u.team, token: session.token,
+        case_id: caseId,
+        amount: Number($("oAmount").value||0),
+        payment_type: $("oType").value,
+        channel: $("oChannel").value,
+        note: $("oNote").value
+      };
+      const r=await apiPost(payload);
+      if(!r.ok) return alert(r.error||"Hata");
+      showForm(`<div class="text-sm text-emerald-300">Kaydedildi ✅</div>`);
+      await loadDetail();
+    });
+  });
+
+  $("btnNote").addEventListener("click", ()=>{
+    showForm(`
+      <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Not</div>
+      <select id="nChannel" class="sel w-full">
+        <option value="call">call</option>
+        <option value="whatsapp">whatsapp</option>
+        <option value="mail">mail</option>
+      </select>
+      <textarea id="nNote" class="inp w-full" rows="4" placeholder="Not"></textarea>
+      <button id="nSend" class="btn w-full">Kaydet</button>
+    `);
+    $("nSend").addEventListener("click", async ()=>{
+      const u=session.user;
+      const payload = {
+        action:"createNote",
+        user_id:u.user_id, role:u.role, team:u.team, token: session.token,
+        case_id: caseId,
+        channel: $("nChannel").value,
+        note: $("nNote").value
+      };
+      const r=await apiPost(payload);
+      if(!r.ok) return alert(r.error||"Hata");
+      showForm(`<div class="text-sm text-emerald-300">Kaydedildi ✅</div>`);
+      await loadDetail();
+    });
+  });
+}
+
+async function init(){
+  session = loadSession();
+  if(!session || !session.user || !session.token){
+    location.href="/index.html";
+    return;
+  }
+
+  caseId = q("case_id");
+  if(!caseId){
+    alert("case_id yok");
+    location.href="/dosyalar.html";
+    return;
+  }
+
+  $("btnBack").addEventListener("click", ()=> location.href="/dosyalar.html");
+  $("btnLogout").addEventListener("click", ()=> { clearSession(); location.href="/index.html"; });
+
+  wireActions();
+  try{
+    await loadDetail();
+  }catch(e){
+    alert("Hata: " + (e.message||e));
+  }
+}
+
+init();
+</script>
+</body>
+</html>
+
+        'cerceve':'🔴 Çerçeve',
+        'x':'⚫ X Süreci',
+        'closed':'✅ Kapalı'
+      };
+      const k = String(s||'').toLowerCase();
+      return m[k] || (s || '-');
+    }
+
+    function qs(name){
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    const sess = getSession();
+    if(!sess) logout();
+
+    const user = sess.user;
+    const caseId = qs('case_id');
+    if(!caseId) { alert('case_id yok'); window.location.href='/dosyalar.html'; }
+
+    document.getElementById('logout').onclick = logout;
+    document.getElementById('refresh').onclick = load;
+
+    let currentCase = null;
+
+    async function load(){
+      const data = await apiForm({
+        action:'getCaseDetail',
+        user_id: user.user_id,
+        role: user.role,
+        team: user.team || '',
+        case_id: caseId
+      });
+
+      if(!data.ok) { alert('❌ ' + (data.error || 'getCaseDetail failed')); return; }
+
+      currentCase = data.case;
+
+      document.getElementById('title').textContent = currentCase.account_name + ' — ' + stageLabel(currentCase.stage);
+      document.getElementById('subtitle').textContent = `${currentCase.account_code || ''} • owner: ${currentCase.owner_user_id || ''} • status: ${currentCase.status || ''}`;
+      document.getElementById('company').textContent = currentCase.account_name || '-';
+      document.getElementById('meta').textContent = `Stage: ${currentCase.stage || '-'} • Lock: ${currentCase.lock_reason || '-'} • Broken: ${currentCase.broken_promise_count || 0}`;
+      document.getElementById('overdue').textContent = fmtTRY(currentCase.overdue_balance);
+      document.getElementById('balance').textContent = fmtTRY(currentCase.balance);
+      document.getElementById('promise').textContent = (currentCase.last_promise_date || '-') + (currentCase.promise_amount ? (' • ' + fmtTRY(currentCase.promise_amount)) : '');
+      document.getElementById('postpone').textContent = `${currentCase.postpone_used || 0}/${currentCase.postpone_limit || 0}`;
+
+      const banner = document.getElementById('banner');
+      if(currentCase.lock_reason){
+        banner.textContent = `Bu dosya kilitli: ${currentCase.lock_reason} (Stage: ${currentCase.stage})`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      // UI disable on cerceve / locked
+      const stage = String(currentCase.stage||'').toLowerCase();
+      const locked = !!currentCase.lock_reason;
+
+      // Promise: if already promised or stage not allow
+      document.getElementById('btnPromise').disabled = !!currentCase.last_promise_date || stage === 'cerceve';
+      document.getElementById('btnPromise').classList.toggle('opacity-50', document.getElementById('btnPromise').disabled);
+
+      // Postpone: if locked or stage cerceve
+      document.getElementById('btnPostpone').disabled = locked || stage === 'cerceve';
+      document.getElementById('btnPostpone').classList.toggle('opacity-50', document.getElementById('btnPostpone').disabled);
+
+      renderTimeline(data.timeline || []);
+    }
+
+    function renderTimeline(items){
+      const tb = document.getElementById('timeline');
+      tb.innerHTML = '';
+      items.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-zinc-900';
+        tr.innerHTML = `
+          <td class="py-2 pr-3 whitespace-nowrap text-zinc-300">${a.action_date_time || ''}</td>
+          <td class="py-2 pr-3 whitespace-nowrap">${a.action_type || ''}</td>
+          <td class="py-2 pr-3 whitespace-nowrap">${a.created_by_user_id || ''}</td>
+          <td class="py-2 pr-3 whitespace-nowrap">${a.channel || ''}</td>
+          <td class="py-2 pr-3">${(a.note || '').toString()}</td>
+          <td class="py-2 pr-3 whitespace-nowrap">${a.amount === '' ? '' : fmtTRY(a.amount)}</td>
+          <td class="py-2 pr-3 whitespace-nowrap">${a.promise_date || ''}</td>
+          <td class="py-2 pr-3 whitespace-nowrap text-xs text-zinc-400">${a.system_flag || ''}</td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+    async function createPromise(){
+      const promise_date = document.getElementById('p_date').value;
+      const amount = document.getElementById('p_amount').value;
+      const channel = document.getElementById('p_channel').value;
+      const note = document.getElementById('p_note').value;
+
+      const data = await apiForm({
+        action:'createPromise',
+        user_id:user.user_id, role:user.role, team:user.team||'',
+        case_id:caseId,
+        promise_date, amount,
+        channel: channel || '',
+        note: note || ''
+      });
+
+      if(!data.ok) throw new Error(data.error || 'createPromise failed');
+    }
+
+    async function createPostpone(){
+      const new_date = document.getElementById('pp_date').value;
+      const reason = document.getElementById('pp_reason').value;
+      const channel = document.getElementById('pp_channel').value;
+      const note = document.getElementById('pp_note').value;
+
+      const data = await apiForm({
+        action:'createPostpone',
+        user_id:user.user_id, role:user.role, team:user.team||'',
+        case_id:caseId,
+        new_date,
+        reason: reason || '',
+        channel: channel || '',
+        note: note || ''
+      });
+
+      if(!data.ok) throw new Error(data.error || 'createPostpone failed');
+    }
+
+    async function createPayment(){
+      const amount = document.getElementById('pay_amount').value;
+      const payment_type = document.getElementById('pay_type').value;
+      const channel = document.getElementById('pay_channel').value;
+      const note = document.getElementById('pay_note').value;
+
+      const data = await apiForm({
+        action:'createPayment',
+        user_id:user.user_id, role:user.role, team:user.team||'',
+        case_id:caseId,
+        amount,
+        payment_type: payment_type || '',
+        channel: channel || '',
+        note: note || ''
+      });
+
+      if(!data.ok) throw new Error(data.error || 'createPayment failed');
+    }
+
+    async function createNote(){
+      const channel = document.getElementById('n_channel').value;
+      const note = document.getElementById('n_note').value;
+
+      const data = await apiForm({
+        action:'createNote',
+        user_id:user.user_id, role:user.role, team:user.team||'',
+        case_id:caseId,
+        channel: channel || '',
+        note
+      });
+
+      if(!data.ok) throw new Error(data.error || 'createNote failed');
+    }
+
+    document.getElementById('btnPromise').onclick = async () => {
+      try { await createPromise(); await load(); alert('✅ Promise kaydedildi'); }
+      catch(e){ alert('❌ ' + (e.message || e)); }
+    };
+
+    document.getElementById('btnPostpone').onclick = async () => {
+      try { await createPostpone(); await load(); alert('✅ Postpone kaydedildi'); }
+      catch(e){ alert('❌ ' + (e.message || e)); }
+    };
+
+    document.getElementById('btnPayment').onclick = async () => {
+      try { await createPayment(); await load(); alert('✅ Payment kaydedildi'); }
+      catch(e){ alert('❌ ' + (e.message || e)); }
+    };
+
+    document.getElementById('btnNote').onclick = async () => {
+      try { await createNote(); await load(); alert('✅ Note kaydedildi'); }
+      catch(e){ alert('❌ ' + (e.message || e)); }
+    };
+
+    load();
+  </script>
+</body>
+</html>
