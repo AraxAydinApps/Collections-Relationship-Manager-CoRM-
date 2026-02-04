@@ -987,10 +987,16 @@ async function submitAction(e){
 
     else if (type === "xnote"){
       // چون backend فعلاً اکشن تغییر stage به X ندارد، به عنوان NOTE ثبت می‌کنیم
-      payload = { action:"createNote", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
-        channel: channel || "call",
-        note: `X_STAGE_REQUESTED | ${note || ""}`.trim()
-      };
+  payload = {
+    action: "moveToX",
+    user_id: u.user_id,
+    role: u.role,
+    team: u.team,
+    token: session.token,
+    case_id: caseId,
+    channel: channel || "call",
+    note: note || ""
+  };
     }
 
     const res = await apiPost(payload);
@@ -1034,7 +1040,7 @@ async function init(){
   $("btnQuickPromise").addEventListener("click", ()=> quickFill("promise"));
   $("btnQuickReminder").addEventListener("click", ()=> quickFill("note"));
   $("btnQuickPayment").addEventListener("click", ()=> quickFill("payment"));
-  $("btnQuickX").addEventListener("click", ()=> quickFill("xnote"));
+  $("btnQuickX").addEventListener("click", ()=> quickFill("moveToX"));
 
   $("action-form").addEventListener("submit", submitAction);
 
@@ -1064,5 +1070,6 @@ init();
 </script>
 </body>
 </html>
+
 
 
