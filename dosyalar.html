@@ -126,12 +126,94 @@
     </div>
   </div>
 
+  <!-- =========================
+       NEW CASE MODAL (POPUP)
+       ========================= -->
+  <div id="modalNewCase" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="w-full max-w-2xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="text-xl font-bold text-zinc-100">Yeni Dosya (Case Oluştur)</div>
+          <div class="text-sm text-zinc-400 mt-1">Sadece ana admin yeni dosya oluşturabilir.</div>
+        </div>
+        <button id="btnCloseNewCase" class="btn2">Kapat</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Code</div>
+          <input id="nc_account_code" class="inp w-full" placeholder="120.01.999" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Name</div>
+          <input id="nc_account_name" class="inp w-full" placeholder="Firma Adı" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Collector (Owner)</div>
+          <select id="nc_owner_user_id" class="sel w-full">
+            <option value="">Yükleniyor...</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Due Date</div>
+          <input id="nc_due_date" type="date" class="inp w-full" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Balance</div>
+          <input id="nc_balance" class="inp w-full" placeholder="0" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Overdue Balance</div>
+          <input id="nc_overdue_balance" class="inp w-full" placeholder="0 (gecikmişse negatif)" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Phone (TR)</div>
+          <input id="nc_phone" class="inp w-full" placeholder="05xx..., 5xx..., +90..." />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Email</div>
+          <input id="nc_email" class="inp w-full" placeholder="mail@firma.com" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Postpone Limit</div>
+          <input id="nc_postpone_limit" class="inp w-full" placeholder="2" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Type / Group</div>
+          <input id="nc_type_group" class="inp w-full" placeholder="type_code | group_code (opsiyonel)" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 mt-5">
+        <button id="btnCreateCase" class="btn">Oluştur + SMS Gönder</button>
+      </div>
+
+      <div class="text-xs text-zinc-500 mt-3 leading-relaxed">
+        Not: Oluşturulduğunda CASES sheet'e kayıt edilir ve borçluya SMS gider.
+        <br/>sms_state = <span class="mono text-zinc-300">NEW</span> , is_paid = <span class="mono text-zinc-300">FALSE</span>
+      </div>
+    </div>
+  </div>
+
 <script>
 /** CONFIG */
 const WEBAPP_URL = "/api/corm";
 const DETAIL_PAGE = "/dosyadetayi.html";
 const SESSION_KEY = "corm_session";
 const COOKIE_NAME = "corm_session";
+
+/** VALID VALUES (Google Sheet validation) */
+const SMS_STATES_ALLOWED = ["NEW","NO_PHONE","DEBTOR_DATE_SET","DUE_INFO_SENT","FINAL_SENT","LEGAL_SENT","PAID","PAYLINK_SENT"];
+const IS_PAID_ALLOWED = ["FALSE","TRUE"]; // Sheet expects TRUE/FALSE
 
 /** STATE */
 let session = null;
@@ -199,6 +281,45 @@ async function loadCases(){
   const data = await apiPost({ action:"listCases", user_id:u.user_id, role:u.role, team:u.team, token: session.token });
   if (!data.ok) throw new Error(data.error || "listCases failed");
   allCases = data.cases || [];
+}
+
+/** Role / permissions */
+function isMainAdmin(){
+  // Front kontrol: فقط admin
+  return session?.user?.role === "admin";
+}
+
+/** Modal helpers */
+function openModalNewCase(){
+  $("modalNewCase").classList.remove("hidden");
+  $("modalNewCase").classList.add("flex");
+}
+function closeModalNewCase(){
+  $("modalNewCase").classList.add("hidden");
+  $("modalNewCase").classList.remove("flex");
+}
+function parseTypeGroup(){
+  const raw = ($("nc_type_group").value || "").trim();
+  if (!raw) return { type_code:"", group_code:"" };
+  const parts = raw.split("|").map(x=>x.trim());
+  return { type_code: parts[0] || "", group_code: parts[1] || "" };
+}
+async function loadCollectorsIntoSelect(){
+  const sel = $("nc_owner_user_id");
+  sel.innerHTML = `<option value="">Yükleniyor...</option>`;
+  const u = session.user;
+
+  const data = await apiPost({
+    action:"listCollectors",
+    user_id:u.user_id, role:u.role, team:u.team, token: session.token
+  });
+
+  if (!data.ok) throw new Error(data.error || "listCollectors failed");
+
+  const list = data.collectors || [];
+  sel.innerHTML = `<option value="">Seçiniz</option>` + list.map(x =>
+    `<option value="${String(x.user_id)}">${String(x.full_name)} (${String(x.user_id)})</option>`
+  ).join("");
 }
 
 /** UI utils */
@@ -353,7 +474,103 @@ async function init(){
     window.location.href = "/index.html";
   });
 
-  $("btnNewCase").addEventListener("click", ()=> toast("Yeni Dosya: MVP'de yakında."));
+  // Modal close actions
+  $("btnCloseNewCase").addEventListener("click", closeModalNewCase);
+  $("modalNewCase").addEventListener("click", (e)=>{
+    if (e.target === $("modalNewCase")) closeModalNewCase();
+  });
+
+  // NEW CASE
+  $("btnNewCase").addEventListener("click", async ()=>{
+    try{
+      if (!isMainAdmin()){
+        toast("Sadece ana admin yeni dosya oluşturabilir.");
+        return;
+      }
+      openModalNewCase();
+      await loadCollectorsIntoSelect();
+    } catch(e){
+      alert("Hata: " + (e.message || e));
+    }
+  });
+
+  // Create case submit
+  $("btnCreateCase").addEventListener("click", async ()=>{
+    try{
+      if (!isMainAdmin()){
+        toast("Yetkiniz yok.");
+        return;
+      }
+
+      const account_code = ($("nc_account_code").value || "").trim();
+      const account_name = ($("nc_account_name").value || "").trim();
+      const owner_user_id = ($("nc_owner_user_id").value || "").trim();
+      const due_date = ($("nc_due_date").value || "").trim(); // yyyy-mm-dd
+
+      const phone = ($("nc_phone").value || "").trim();
+      const email = ($("nc_email").value || "").trim();
+
+      const balance = ($("nc_balance").value || "").trim();
+      const overdue_balance = ($("nc_overdue_balance").value || "").trim();
+      const postpone_limit = ($("nc_postpone_limit").value || "").trim();
+
+      if (!account_code || !account_name || !owner_user_id || !due_date){
+        alert("Zorunlu: account_code, account_name, owner, due_date");
+        return;
+      }
+
+      const tg = parseTypeGroup();
+      const u = session.user;
+
+      // IMPORTANT: enforce Sheet-valid values
+      const sms_state = "NEW";     // allowed
+      const is_paid = "FALSE";     // allowed (TRUE/FALSE)
+
+      if (!SMS_STATES_ALLOWED.includes(sms_state)) throw new Error("Invalid sms_state");
+      if (!IS_PAID_ALLOWED.includes(is_paid)) throw new Error("Invalid is_paid");
+
+      const payload = {
+        action: "createCase",
+        user_id: u.user_id,
+        role: u.role,
+        team: u.team,
+        token: session.token,
+
+        account_code,
+        account_name,
+        owner_user_id,
+        due_date,
+        phone,
+        email,
+
+        balance,
+        overdue_balance,
+        postpone_limit,
+
+        type_code: tg.type_code,
+        group_code: tg.group_code,
+
+        // send explicit values so Apps Script writes correct validations
+        sms_state,
+        is_paid
+      };
+
+      const resp = await apiPost(payload);
+      if (!resp.ok) throw new Error(resp.error || "createCase failed");
+
+      toast("Dosya oluşturuldu + SMS gönderildi");
+      closeModalNewCase();
+
+      await loadCases();
+      buildOwnerFilter();
+      applyFilters();
+
+    } catch(e){
+      alert("Hata: " + (e.message || e));
+    }
+  });
+
+  // New collector (later)
   $("btnNewCollector").addEventListener("click", ()=> toast("Yeni Tahsilatçı: MVP'de yakında."));
 
   $("btnRefresh").addEventListener("click", async ()=>{
@@ -383,7 +600,6 @@ async function init(){
     buildOwnerFilter();
     applyFilters();
   } catch (e){
-    // اگر API خطا داد، اینجا لاگین را پاک نمی‌کنیم
     alert("Hata: " + (e.message || e));
   }
 }
