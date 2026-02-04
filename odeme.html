@@ -854,351 +854,316 @@
    </main>
   </div>
   <script>
-    // Default configuration
-    const defaultConfig = {
-      page_title: 'ÖDEME & ERTELEME',
-      page_subtitle: 'Ödeme yap veya sınırlı süreli erteleme talep et',
-      portal_name: 'Tahsilat ve Ödeme Portalı',
-      company_name: 'Yıldız Makina Ltd. Şti.',
-      account_code: '120.01.001',
-      file_number: 'DYM-2026-0142',
-      responsible: 'Mehmet K.',
-      background_color: '#09090b',
-      surface_color: '#18181b',
-      text_color: '#e4e4e7',
-      border_color: '#27272a',
-      accent_color: '#71717a'
-    };
+  /***********************
+   * CoRM Payment Portal (Dynamic)
+   * Reads: token + case_id from URL
+   * Calls: getPayContext, setDebtorDate, debtorPaymentNotice
+   ***********************/
 
-    // Postpone state
-    let remainingRights = 1;
-    const maxRights = 3;
-    const usedRights = maxRights - remainingRights;
+  const WEBAPP_URL = "/api/corm";
 
-    // Initialize Element SDK
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        
-        onConfigChange: async (config) => {
-          // Update page title
-          const pageTitleEl = document.getElementById('page-title');
-          if (pageTitleEl) {
-            pageTitleEl.textContent = (config.page_title || defaultConfig.page_title).toUpperCase();
-          }
-          
-          // Update page subtitle
-          const pageSubtitleEl = document.getElementById('page-subtitle');
-          if (pageSubtitleEl) {
-            pageSubtitleEl.textContent = config.page_subtitle || defaultConfig.page_subtitle;
-          }
-          
-          // Update portal name
-          const portalNameEl = document.getElementById('portal-name');
-          if (portalNameEl) {
-            portalNameEl.textContent = config.portal_name || defaultConfig.portal_name;
-          }
-          
-          // Update company name
-          const companyNameEl = document.getElementById('company-name');
-          if (companyNameEl) {
-            companyNameEl.textContent = config.company_name || defaultConfig.company_name;
-          }
-          
-          // Update account code
-          const accountCodeEl = document.getElementById('account-code');
-          if (accountCodeEl) {
-            accountCodeEl.textContent = config.account_code || defaultConfig.account_code;
-          }
-          
-          // Update file number
-          const fileNumberEl = document.getElementById('file-number');
-          if (fileNumberEl) {
-            fileNumberEl.textContent = config.file_number || defaultConfig.file_number;
-          }
-          
-          // Update responsible
-          const responsibleEl = document.getElementById('responsible');
-          if (responsibleEl) {
-            responsibleEl.textContent = config.responsible || defaultConfig.responsible;
-          }
-          
-          // Update colors
-          const appContainer = document.getElementById('app-container');
-          if (appContainer) {
-            appContainer.style.backgroundColor = config.background_color || defaultConfig.background_color;
-          }
-        },
-        
-        mapToCapabilities: (config) => ({
-          recolorables: [
-            {
-              get: () => config.background_color || defaultConfig.background_color,
-              set: (value) => {
-                config.background_color = value;
-                window.elementSdk.setConfig({ background_color: value });
-              }
-            },
-            {
-              get: () => config.surface_color || defaultConfig.surface_color,
-              set: (value) => {
-                config.surface_color = value;
-                window.elementSdk.setConfig({ surface_color: value });
-              }
-            },
-            {
-              get: () => config.text_color || defaultConfig.text_color,
-              set: (value) => {
-                config.text_color = value;
-                window.elementSdk.setConfig({ text_color: value });
-              }
-            },
-            {
-              get: () => config.border_color || defaultConfig.border_color,
-              set: (value) => {
-                config.border_color = value;
-                window.elementSdk.setConfig({ border_color: value });
-              }
-            },
-            {
-              get: () => config.accent_color || defaultConfig.accent_color,
-              set: (value) => {
-                config.accent_color = value;
-                window.elementSdk.setConfig({ accent_color: value });
-              }
-            }
-          ],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        
-        mapToEditPanelValues: (config) => new Map([
-          ['page_title', config.page_title || defaultConfig.page_title],
-          ['page_subtitle', config.page_subtitle || defaultConfig.page_subtitle],
-          ['portal_name', config.portal_name || defaultConfig.portal_name],
-          ['company_name', config.company_name || defaultConfig.company_name],
-          ['account_code', config.account_code || defaultConfig.account_code],
-          ['file_number', config.file_number || defaultConfig.file_number],
-          ['responsible', config.responsible || defaultConfig.responsible]
-        ])
-      });
-    }
+  const qs = (k) => new URL(location.href).searchParams.get(k) || "";
+  const token = qs("token");
+  const caseId = qs("case_id");
 
-    // Payment method selection
-    let selectedMethod = null;
+  const $ = (id) => document.getElementById(id);
 
-    document.querySelectorAll('.payment-method-card').forEach(card => {
-      card.addEventListener('click', function() {
-        // Remove selection from all cards
-        document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
-        
-        // Add selection to clicked card
-        this.classList.add('selected');
-        
-        // Hide all detail panels
-        document.querySelectorAll('.payment-details').forEach(panel => panel.classList.remove('show'));
-        
-        // Show relevant detail panel
-        const method = this.getAttribute('data-method');
-        selectedMethod = method;
-        const detailPanel = document.getElementById('details-' + method);
-        if (detailPanel) {
-          detailPanel.classList.add('show');
-        }
-        
-        // Enable complete button
-        const completeBtn = document.getElementById('btn-complete');
-        completeBtn.disabled = false;
-      });
+  function fmtTRY(n){
+    const x = Number(n);
+    const v = Number.isFinite(x) ? x : 0;
+    return v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+  }
+  function isoToTr(iso){
+    if (!iso) return "-";
+    // yyyy-mm-dd => dd.mm.yyyy
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso.slice(8,10)+"."+iso.slice(5,7)+"."+iso.slice(0,4);
+    return iso;
+  }
+  function toast(msg, ok=true){
+    const message = document.createElement('div');
+    message.style.cssText =
+      'position: fixed; top: 20px; right: 20px; background: ' + (ok ? 'rgba(134,239,172,0.2)' : 'rgba(252,165,165,0.15)') +
+      '; border: 1px solid ' + (ok ? '#86efac' : '#fca5a5') +
+      '; color: ' + (ok ? '#86efac' : '#fca5a5') +
+      '; padding: 12px 20px; border-radius: 6px; font-size: 11px; font-weight: 600; z-index: 1000;';
+    message.textContent = msg;
+    document.body.appendChild(message);
+    setTimeout(() => message.remove(), 2500);
+  }
+
+  async function apiPost(payload){
+    const res = await fetch(WEBAPP_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload),
     });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  }
 
-    // Copy to clipboard function
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        // Show success message
-        const message = document.createElement('div');
-        message.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(134, 239, 172, 0.2); border: 1px solid #86efac; color: #86efac; padding: 12px 20px; border-radius: 6px; font-size: 11px; font-weight: 600; z-index: 1000;';
-        message.textContent = '✓ Kopyalandı';
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-          message.remove();
-        }, 2000);
-      }).catch(() => {
-        console.error('Copy failed');
-      });
+  // Payment method selection
+  let selectedMethod = null;
+  document.querySelectorAll('.payment-method-card').forEach(card => {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+
+      document.querySelectorAll('.payment-details').forEach(panel => panel.classList.remove('show'));
+      const method = this.getAttribute('data-method');
+      selectedMethod = method;
+      const detailPanel = document.getElementById('details-' + method);
+      if (detailPanel) detailPanel.classList.add('show');
+
+      $("btn-complete").disabled = false;
+    });
+  });
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => toast('✓ Kopyalandı', true)).catch(() => toast('Kopyalama başarısız', false));
+  }
+  window.copyToClipboard = copyToClipboard;
+
+  function handleOnlinePayment(){
+    toast("Güvenli ödeme sayfasına yönlendiriliyorsunuz...", true);
+  }
+  window.handleOnlinePayment = handleOnlinePayment;
+
+  let ctx = null; // {case, portal}
+
+  function setStatusBadge(caseObj){
+    // Basic badge rule: today due => due-today, overdue => overdue
+    const badge = document.querySelector(".status-badge");
+    if (!badge) return;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dueIso = (caseObj.due_date || "").slice(0,10);
+    let dueDate = null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dueIso)) {
+      dueDate = new Date(dueIso + "T00:00:00");
     }
 
-    // Complete payment function
-    function completePayment() {
-      if (!selectedMethod) return;
-      
-      const completeBtn = document.getElementById('btn-complete');
-      completeBtn.disabled = true;
-      completeBtn.textContent = 'İŞLENİYOR...';
-      
-      // Simulate processing
-      setTimeout(() => {
-        // Show success message
-        const message = document.createElement('div');
-        message.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #18181b; border: 1px solid #27272a; padding: 32px; border-radius: 8px; text-align: center; z-index: 1000; max-width: 400px;';
-        message.innerHTML = `
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 16px;">
-            <circle cx="24" cy="24" r="22" stroke="#86efac" stroke-width="2"/>
-            <path d="M14 24L20 30L34 16" stroke="#86efac" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div style="font-size: 16px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;">Ödeme Talimatı Alındı</div>
-          <div style="font-size: 12px; color: #a1a1aa; line-height: 1.5;">
-            ${selectedMethod === 'wire' ? 'Havale işleminizi gerçekleştirdikten sonra sistem otomatik olarak güncellenecektir.' : 'Ödemeniz işleme alındı. Sorumlu ekibiniz bilgilendirilecektir.'}
-          </div>
-        `;
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-          message.remove();
-          completeBtn.textContent = 'ÖDEMEYİ TAMAMLA';
-          completeBtn.disabled = false;
-        }, 3000);
-      }, 1500);
+    badge.classList.remove("due-today","overdue");
+    if (dueDate && dueDate.getTime() === today.getTime()){
+      badge.classList.add("due-today");
+      badge.textContent = "Bugün ödenmesi bekleniyor";
+    } else if (dueDate && dueDate.getTime() < today.getTime()){
+      badge.classList.add("overdue");
+      badge.textContent = "Vade geçti";
+    } else {
+      badge.classList.add("due-today");
+      badge.textContent = "Ödeme bekleniyor";
+    }
+  }
+
+  function applyPayInfo(payInfo, caseObj){
+    // Wire panel fill (if you set Script Properties)
+    const bankName = payInfo.bank_name || "—";
+    const iban = payInfo.iban || "—";
+    const receiver = payInfo.receiver || "—";
+
+    // Replace hardcoded values inside wire panel
+    const wire = $("details-wire");
+    if (wire) {
+      const nodes = wire.querySelectorAll(".detail-value");
+      // expected order: Banka Adı, IBAN, Alıcı Ünvan, Açıklama
+      if (nodes[0]) nodes[0].textContent = bankName;
+      if (nodes[1]) nodes[1].textContent = iban;
+      if (nodes[2]) nodes[2].textContent = receiver;
+
+      const desc = `${caseObj.account_code || ""} – ${caseObj.case_id || ""}`.trim();
+      if (nodes[3]) nodes[3].textContent = desc || "—";
+
+      // Update copy buttons handlers to dynamic values
+      const btns = wire.querySelectorAll(".copy-button");
+      if (btns[0]) btns[0].onclick = () => copyToClipboard(iban);
+      if (btns[1]) btns[1].onclick = () => copyToClipboard(desc);
+    }
+  }
+
+  function initPostponeUI(){
+    const caseObj = ctx.case;
+    const p = ctx.portal;
+
+    const remain = Math.max(0, Number(p.postpone_limit) - Number(p.postpone_used));
+    const max = Number(p.postpone_limit);
+
+    const rightsBox = $("rights-box");
+    const rightsDisplay = $("rights-display");
+    if (rightsDisplay) rightsDisplay.textContent = `${remain} / ${max}`;
+
+    // max days rule
+    const maxDays = Number(p.max_postpone_days) || 7;
+    const dateInput = $("postpone-date");
+
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + maxDays);
+
+    dateInput.min = today.toISOString().split('T')[0];
+    dateInput.max = maxDate.toISOString().split('T')[0];
+
+    // If no rights -> disable
+    const reasonSel = $("postpone-reason");
+    const desc = $("postpone-description");
+    const btn = $("btn-postpone");
+
+    if (remain <= 0){
+      rightsBox.classList.add("depleted");
+      rightsDisplay.classList.add("depleted");
+      rightsDisplay.textContent = "Erteleme Hakkı Doldu";
+      dateInput.disabled = true;
+      reasonSel.disabled = true;
+      desc.disabled = true;
+      btn.disabled = true;
+      $("postpone-warnings").innerHTML = '<div class="alert-box danger">Erteleme hakkınız kalmamıştır. Ödeme yapmanız gerekmektedir.</div>';
+      return;
     }
 
-    // Handle online payment redirect
-    function handleOnlinePayment() {
-      // In a real implementation, this would redirect to a secure payment gateway
-      const message = document.createElement('div');
-      message.style.cssText = 'position: fixed; top: 20px; right: 20px; background: rgba(134, 239, 172, 0.2); border: 1px solid #86efac; color: #86efac; padding: 12px 20px; border-radius: 6px; font-size: 11px; font-weight: 600; z-index: 1000;';
-      message.textContent = 'Güvenli ödeme sayfasına yönlendiriliyorsunuz...';
-      document.body.appendChild(message);
-      
-      setTimeout(() => {
-        message.remove();
-      }, 2000);
+    // validate on change
+    function validate(){
+      const date = dateInput.value;
+      const reason = reasonSel.value;
+      btn.disabled = !(date && reason);
     }
 
-    // Initialize date picker with constraints
-    function initDatePicker() {
-      const dateInput = document.getElementById('postpone-date');
-      const today = new Date();
-      const maxDate = new Date();
-      maxDate.setDate(today.getDate() + 7);
-      
-      // Set min and max dates
-      dateInput.min = today.toISOString().split('T')[0];
-      dateInput.max = maxDate.toISOString().split('T')[0];
-      
-      // Check if rights are depleted
-      if (remainingRights <= 0) {
-        dateInput.disabled = true;
-        document.getElementById('postpone-reason').disabled = true;
-        document.getElementById('postpone-description').disabled = true;
-        document.getElementById('btn-postpone').disabled = true;
-        
-        const rightsBox = document.getElementById('rights-box');
-        const rightsDisplay = document.getElementById('rights-display');
-        rightsBox.classList.add('depleted');
-        rightsDisplay.classList.add('depleted');
-        rightsDisplay.textContent = 'Erteleme Hakkı Doldu';
-        
-        const warningsDiv = document.getElementById('postpone-warnings');
-        warningsDiv.innerHTML = '<div class="alert-box danger">Erteleme hakkınız kalmamıştır. Ödeme yapmanız gerekmektedir.</div>';
-      }
-    }
+    dateInput.addEventListener("change", validate);
+    reasonSel.addEventListener("change", validate);
 
-    // Validate postpone form
-    function validatePostponeForm() {
-      const date = document.getElementById('postpone-date').value;
-      const reason = document.getElementById('postpone-reason').value;
-      const btn = document.getElementById('btn-postpone');
-      
-      if (date && reason && remainingRights > 0) {
-        btn.disabled = false;
-        updateWarnings();
-      } else {
+    // expose submit handler
+    window.submitPostponeRequest = async function(){
+      const date = dateInput.value;
+      const reason = reasonSel.value;
+      const note = desc.value;
+
+      if (!date || !reason) return;
+
+      btn.disabled = true;
+      const oldText = btn.textContent;
+      btn.textContent = "GÖNDERILIYOR...";
+
+      try {
+        const r = await apiPost({
+          action: "setDebtorDate",
+          case_id: caseId,
+          token,
+          debtor_date: date,
+          reason,
+          note
+        });
+        if (!r.ok) throw new Error(r.error || "setDebtorDate failed");
+
+        toast("✓ Erteleme kaydedildi", true);
+
+        // refresh context
+        await loadContext();
+
+        // reset inputs
+        dateInput.value = "";
+        reasonSel.value = "";
+        desc.value = "";
+      } catch(e){
+        toast("Hata: " + (e.message || e), false);
+      } finally {
+        btn.textContent = oldText;
+        // re-evaluate enabled state
         btn.disabled = true;
       }
+    };
+  }
+
+  window.completePayment = async function(){
+    if (!selectedMethod) return;
+
+    const btn = $("btn-complete");
+    btn.disabled = true;
+    const oldText = btn.textContent;
+    btn.textContent = "İŞLENİYOR...";
+
+    try {
+      const r = await apiPost({
+        action: "debtorPaymentNotice",
+        case_id: caseId,
+        token,
+        method: selectedMethod,
+        note: ""
+      });
+      if (!r.ok) throw new Error(r.error || "debtorPaymentNotice failed");
+
+      toast("✓ Bildiriminiz alındı (ekip kontrol edecek)", true);
+
+      // UX: show modal message (existing style)
+      const message = document.createElement('div');
+      message.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #18181b; border: 1px solid #27272a; padding: 32px; border-radius: 8px; text-align: center; z-index: 1000; max-width: 400px;';
+      message.innerHTML = `
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 16px;">
+          <circle cx="24" cy="24" r="22" stroke="#86efac" stroke-width="2"/>
+          <path d="M14 24L20 30L34 16" stroke="#86efac" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font-size: 16px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;">Bildirim Alındı</div>
+        <div style="font-size: 12px; color: #a1a1aa; line-height: 1.5;">
+          Ödeme bildiriminiz kaydedildi. Ekibimiz kontrol ettikten sonra dosya güncellenecektir.
+        </div>
+      `;
+      document.body.appendChild(message);
+      setTimeout(()=>message.remove(), 3000);
+
+    } catch(e){
+      toast("Hata: " + (e.message || e), false);
+    } finally {
+      btn.textContent = oldText;
+      btn.disabled = false;
+    }
+  };
+
+  async function loadContext(){
+    if (!token || !caseId){
+      toast("Geçersiz bağlantı (token/case_id yok)", false);
+      return;
+    }
+    const data = await apiPost({ action:"getPayContext", case_id: caseId, token });
+    if (!data.ok) throw new Error(data.error || "getPayContext failed");
+    ctx = data;
+
+    const c = ctx.case;
+    const p = ctx.portal;
+
+    // Fill header / basic
+    $("company-name").textContent = c.account_name || "-";
+    $("account-code").textContent = c.account_code || "-";
+    $("file-number").textContent = c.case_id || "-";
+    $("responsible").textContent = p.owner_full_name || String(c.owner_user_id || "-");
+
+    // Amount section
+    const amountEl = document.querySelector(".amount-value");
+    if (amountEl) amountEl.textContent = fmtTRY(p.amount_due);
+
+    // Description text
+    const desc = document.querySelector(".amount-description");
+    if (desc){
+      if (Number(c.promise_amount) > 0) desc.textContent = "Bu tutar sistemde kayıtlı son tahsilat sözüdür.";
+      else desc.textContent = "Bu tutar geciken/aktif bakiye üzerinden hesaplanmıştır.";
     }
 
-    // Update dynamic warnings
-    function updateWarnings() {
-      const warningsDiv = document.getElementById('postpone-warnings');
-      let warningHTML = '';
-      
-      if (usedRights === 1) {
-        warningHTML += '<div class="alert-box warning">Bu erteleme 2. söz olacaktır.</div>';
-      }
-      
-      if (remainingRights === 1) {
-        warningHTML += '<div class="alert-box warning">Bir sonraki erteleme talebi kabul edilmeyebilir.</div>';
-      }
-      
-      if (usedRights >= 2) {
-        warningHTML += '<div class="alert-box danger">Son erteleme sonrası ödeme yapılmazsa dosya X sürecine alınır.</div>';
-      }
-      
-      warningsDiv.innerHTML = warningHTML;
+    setStatusBadge(c);
+    applyPayInfo(p.pay_info || {}, c);
+
+    // Postpone rules text dynamic
+    const hint = document.querySelector(".form-hint");
+    if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${p.max_postpone_days} gün`;
+
+    // Init postpone section
+    initPostponeUI();
+  }
+
+  // On load
+  (async function init(){
+    try {
+      await loadContext();
+    } catch(e){
+      toast("Hata: " + (e.message || e), false);
     }
+  })();
+</script>
 
-    // Submit postpone request
-    function submitPostponeRequest() {
-      const date = document.getElementById('postpone-date').value;
-      const reason = document.getElementById('postpone-reason').value;
-      const description = document.getElementById('postpone-description').value;
-      
-      if (!date || !reason || remainingRights <= 0) return;
-      
-      const btn = document.getElementById('btn-postpone');
-      btn.disabled = true;
-      btn.textContent = 'GÖNDERILIYOR...';
-      
-      // Simulate processing
-      setTimeout(() => {
-        // Show success message
-        const message = document.createElement('div');
-        message.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #18181b; border: 1px solid #27272a; padding: 32px; border-radius: 8px; text-align: center; z-index: 1000; max-width: 400px;';
-        message.innerHTML = `
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 16px;">
-            <circle cx="24" cy="24" r="22" stroke="#fde047" stroke-width="2"/>
-            <path d="M16 24L22 30L32 18" stroke="#fde047" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div style="font-size: 16px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;">Erteleme Talebi Alındı</div>
-          <div style="font-size: 12px; color: #a1a1aa; line-height: 1.5;">
-            Talebiniz sisteme kaydedildi. Sorumlu ekip bilgilendirilecektir.<br>
-            Yeni ödeme tarihi: ${new Date(date).toLocaleDateString('tr-TR')}
-          </div>
-        `;
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-          message.remove();
-          btn.textContent = 'ERTELEME TALEBİ GÖNDER';
-          
-          // Update rights
-          remainingRights--;
-          const rightsDisplay = document.getElementById('rights-display');
-          rightsDisplay.textContent = remainingRights + ' / ' + maxRights;
-          
-          // Reset form
-          document.getElementById('postpone-date').value = '';
-          document.getElementById('postpone-reason').value = '';
-          document.getElementById('postpone-description').value = '';
-          
-          // Reinitialize if rights depleted
-          if (remainingRights <= 0) {
-            initDatePicker();
-          } else {
-            btn.disabled = true;
-          }
-        }, 3000);
-      }, 1500);
-    }
-
-    // Event listeners for postpone form
-    document.getElementById('postpone-date').addEventListener('change', validatePostponeForm);
-    document.getElementById('postpone-reason').addEventListener('change', validatePostponeForm);
-
-    // Initialize on load
-    initDatePicker();
-  </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c830edcb6762459',t:'MTc3MDEzMzU1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
