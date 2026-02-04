@@ -1,1 +1,674 @@
-heloo
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoRM - Dosya Detayı</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing:border-box; }
+    .card { background:#121214; border:1px solid #27272a; border-radius:16px; }
+    .inp, .sel {
+      background:#0f0f10; border:1px solid #27272a; color:#e4e4e7;
+      padding:10px 12px; border-radius:12px; font-size:13px; outline:none; width:100%;
+    }
+    .inp:focus, .sel:focus { border-color:#52525b; }
+    .btn {
+      background:#e4e4e7; color:#09090b; border-radius:12px;
+      padding:10px 14px; font-weight:800; font-size:13px;
+    }
+    .btn2 {
+      background:#18181b; color:#e4e4e7; border:1px solid #27272a; border-radius:12px;
+      padding:10px 14px; font-weight:800; font-size:13px;
+    }
+    .btn:disabled, .btn2:disabled { opacity:.45; cursor:not-allowed; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .stageDot { width:10px; height:10px; border-radius:999px; display:inline-block; }
+    .s-ilk { background:#22c55e; }
+    .s-soz { background:#eab308; }
+    .s-bozuldu { background:#f97316; }
+    .s-cerceve { background:#ef4444; }
+    .s-x { background:#71717a; }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(39, 39, 42, 0.22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39, 39, 42, 0.22) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+    .toast {
+      position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+      padding:12px 14px; border-radius:14px;
+      background:#0b0b0c; border:1px solid #27272a; color:#e4e4e7;
+      font-size:13px; display:none; z-index:50;
+      max-width:min(92vw, 720px);
+    }
+    .krow { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #27272a; }
+    .krow:last-child { border-bottom:none; }
+    .kkey { color:#a1a1aa; font-size:12px; text-transform:uppercase; letter-spacing:.12em; }
+    .kval { color:#e4e4e7; font-size:13px; text-align:right; word-break:break-word; }
+    table { width:100%; border-collapse:separate; border-spacing:0; }
+    th, td { padding:10px 12px; border-bottom:1px solid #27272a; vertical-align:top; }
+    th { color:#a1a1aa; font-size:12px; text-transform:uppercase; letter-spacing:.12em; text-align:left; }
+    td { color:#e4e4e7; font-size:13px; }
+  </style>
+</head>
+
+<body class="h-full">
+  <div class="min-h-full grid-bg" style="background-color:#09090b;">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+
+      <!-- Top bar -->
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <a href="/dosyalar.html" class="text-sm text-zinc-400 hover:text-zinc-200">← Dosyalar</a>
+          <h1 id="title" class="text-3xl font-extrabold text-zinc-100 mt-2">Dosya</h1>
+          <div id="subtitle" class="text-sm text-zinc-400 mt-1">—</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btnRefresh" class="btn2">Yenile</button>
+          <button id="btnLogout" class="btn2">Çıkış</button>
+        </div>
+      </div>
+
+      <!-- Banner -->
+      <div id="banner" class="hidden mb-6 rounded-2xl border border-rose-500/40 bg-rose-950/20 p-4">
+        <div class="text-sm text-rose-200 font-semibold">Bu dosya kilitli.</div>
+        <div id="bannerText" class="text-sm text-rose-300 mt-1 mono"></div>
+      </div>
+
+      <!-- Main layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left: Summary & Details -->
+        <div class="lg:col-span-1 space-y-6">
+
+          <!-- Summary card -->
+          <div class="card p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Firma</div>
+                <div id="company" class="text-xl font-extrabold text-zinc-100 mt-1">—</div>
+                <div id="meta" class="text-sm text-zinc-400 mt-2">—</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Case ID</div>
+                <div id="caseId" class="mono text-zinc-200 mt-1">—</div>
+              </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Gecikmiş</div>
+                <div id="overdue" class="text-lg font-extrabold text-zinc-100 mt-1">—</div>
+              </div>
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Bakiye</div>
+                <div id="balance" class="text-lg font-extrabold text-zinc-100 mt-1">—</div>
+              </div>
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Promise</div>
+                <div id="promise" class="text-lg font-extrabold text-zinc-100 mt-1 mono">—</div>
+              </div>
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Erteleme</div>
+                <div id="postpone" class="text-lg font-extrabold text-zinc-100 mt-1 mono">—</div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-sm text-zinc-400">
+              <span class="inline-flex items-center gap-2">
+                <span id="stageDot" class="stageDot s-x"></span>
+                <span id="stageText">—</span>
+              </span>
+              <span class="mx-2 text-zinc-600">•</span>
+              <span>Owner: <span id="owner" class="mono text-zinc-200">—</span></span>
+            </div>
+
+            <div class="mt-3 text-sm text-zinc-400">
+              Broken Promise: <span id="broken" class="mono text-zinc-200">0</span>
+              <span class="mx-2 text-zinc-600">•</span>
+              Status: <span id="status" class="mono text-zinc-200">—</span>
+            </div>
+
+            <div class="mt-3 text-sm text-zinc-400">
+              Email: <span id="email" class="mono text-zinc-200">—</span><br/>
+              Phone: <span id="phone" class="mono text-zinc-200">—</span><br/>
+              Tags: <span id="tags" class="mono text-zinc-200">—</span>
+            </div>
+          </div>
+
+          <!-- Details (all important CASE fields) -->
+          <div class="card p-5">
+            <div class="text-sm font-extrabold text-zinc-100 mb-4">Dosya Bilgileri</div>
+            <div id="details" class="space-y-0"></div>
+          </div>
+
+        </div>
+
+        <!-- Right: Actions + Timeline -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- Actions -->
+          <div class="card p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-lg font-extrabold text-zinc-100">İşlem Ekle</div>
+                <div class="text-sm text-zinc-400 mt-1">Kısıtlar backend tarafından uygulanır.</div>
+              </div>
+              <div class="text-sm text-zinc-500 mono" id="meChip">—</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+
+              <!-- Promise -->
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-sm font-bold text-zinc-100 mb-3">🟡 Söz (Promise)</div>
+                <div class="space-y-3">
+                  <input id="p_date" class="inp" type="date" />
+                  <input id="p_amount" class="inp" inputmode="decimal" placeholder="Tutar (TRY)" />
+                  <input id="p_channel" class="inp" placeholder="Kanal (call/whatsapp/mail)" />
+                  <input id="p_note" class="inp" placeholder="Not" />
+                  <button id="btnPromise" class="btn w-full">Kaydet</button>
+                </div>
+              </div>
+
+              <!-- Postpone -->
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-sm font-bold text-zinc-100 mb-3">🟠 Erteleme (Postpone)</div>
+                <div class="space-y-3">
+                  <input id="pp_date" class="inp" type="date" />
+                  <input id="pp_reason" class="inp" placeholder="Reason (ör: nakit akışı)" />
+                  <input id="pp_channel" class="inp" placeholder="Kanal (call/whatsapp/mail)" />
+                  <input id="pp_note" class="inp" placeholder="Ek not" />
+                  <button id="btnPostpone" class="btn w-full">Kaydet</button>
+                </div>
+              </div>
+
+              <!-- Payment -->
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-sm font-bold text-zinc-100 mb-3">💳 Ödeme (Payment)</div>
+                <div class="space-y-3">
+                  <input id="pay_amount" class="inp" inputmode="decimal" placeholder="Tutar (TRY)" />
+                  <input id="pay_type" class="inp" placeholder="Tip (EFT/Havale/Nakit...)" />
+                  <input id="pay_channel" class="inp" placeholder="Kanal (call/whatsapp/mail)" />
+                  <input id="pay_note" class="inp" placeholder="Not" />
+                  <button id="btnPayment" class="btn w-full">Kaydet</button>
+                </div>
+              </div>
+
+              <!-- Note -->
+              <div class="rounded-2xl border border-zinc-800 bg-black/20 p-4">
+                <div class="text-sm font-bold text-zinc-100 mb-3">📝 Not</div>
+                <div class="space-y-3">
+                  <input id="n_channel" class="inp" placeholder="Kanal (call/whatsapp/mail)" />
+                  <input id="n_note" class="inp" placeholder="Not" />
+                  <button id="btnNote" class="btn w-full">Kaydet</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="card p-5">
+            <div class="flex items-center justify-between gap-4">
+              <div class="text-lg font-extrabold text-zinc-100">Timeline</div>
+              <div id="tlCount" class="text-sm text-zinc-400">—</div>
+            </div>
+
+            <div class="mt-4 overflow-auto rounded-2xl border border-zinc-800">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="min-width:170px;">Tarih</th>
+                    <th style="min-width:120px;">Tip</th>
+                    <th style="min-width:120px;">User</th>
+                    <th style="min-width:120px;">Kanal</th>
+                    <th>Not</th>
+                    <th style="min-width:120px;">Tutar</th>
+                    <th style="min-width:140px;">Promise Tarihi</th>
+                    <th style="min-width:170px;">Flag</th>
+                    <th style="min-width:90px;">Sonuç</th>
+                  </tr>
+                </thead>
+                <tbody id="timeline"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+<script>
+/** =========================
+ *  0) Force WWW (IMPORTANT for localStorage)
+ *  اگر گاهی بدون www باز میکنی، سشن از بین میره چون localStorage جداست.
+ *  پس همه جا همیشه www باشد.
+ *  ========================= */
+(function forceWww(){
+  if (location.hostname === "arazad.xyz") {
+    location.replace("https://www.arazad.xyz" + location.pathname + location.search + location.hash);
+  }
+})();
+
+/** =========================
+ *  1) CONFIG
+ *  ========================= */
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyl-N86X-NWAzt7fPjX-BUl_DXw09LvGAvuBQDryKcW18G-bKr8Zrhpd0YuQGmUJwVW/exec";
+const LIST_PAGE = "/dosyalar.html";
+const LOGIN_PAGE = "/index.html";
+
+/** =========================
+ *  2) STATE
+ *  ========================= */
+let session = null;
+let caseId = null;
+let currentCase = null;
+
+/** =========================
+ *  3) Helpers
+ *  ========================= */
+const $ = (id) => document.getElementById(id);
+
+function showToast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(()=>{ t.style.display = "none"; }, 2500);
+}
+
+function loadSession(){
+  try {
+    const raw = localStorage.getItem("corm_session");
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){
+    return null;
+  }
+}
+
+function clearSession(){
+  localStorage.removeItem("corm_session");
+  session = null;
+}
+
+function qs(name){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
+function num(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmtTRY(v){
+  const n = num(v);
+  return n.toLocaleString("tr-TR") + " ₺";
+}
+
+function stageLabel(stage){
+  const s = String(stage||"").toLowerCase();
+  if (s==="ilk") return "İlk Hatırlatma";
+  if (s==="soz") return "Söz Alındı";
+  if (s==="bozuldu") return "Söz Bozuldu";
+  if (s==="cerceve") return "Çerçeve";
+  if (s==="x") return "X Süreci";
+  return s || "-";
+}
+
+function stageDotClass(stage){
+  const s = String(stage||"").toLowerCase();
+  if (s==="ilk") return "s-ilk";
+  if (s==="soz") return "s-soz";
+  if (s==="bozuldu") return "s-bozuldu";
+  if (s==="cerceve") return "s-cerceve";
+  if (s==="x") return "s-x";
+  return "s-x";
+}
+
+function safe(v){
+  return (v === null || v === undefined || v === "") ? "—" : String(v);
+}
+
+function htmlEscape(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/** =========================
+ *  4) API
+ *  ========================= */
+async function apiPost(payload){
+  // نکته: Apps Script بعضی وقت‌ها با redirect جواب میده، fetch خودش handle می‌کنه
+  const res = await fetch(WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) throw new Error("HTTP " + res.status);
+
+  // اگر پاسخ JSON نبود، اینجا error می‌خوریم و متن را هم نشان می‌دهیم
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Non-JSON response: " + text.slice(0, 180));
+  }
+}
+
+async function loadDetail(){
+  const u = session.user;
+  const data = await apiPost({
+    action: "getCaseDetail",
+    user_id: u.user_id,
+    role: u.role,
+    team: u.team,
+    token: session.token,
+    case_id: caseId
+  });
+
+  if (!data.ok) throw new Error(data.error || "getCaseDetail failed");
+  currentCase = data.case;
+  renderCase(currentCase);
+  renderTimeline(data.timeline || []);
+}
+
+/** =========================
+ *  5) Render: Case
+ *  ========================= */
+function renderCase(c){
+  $("title").textContent = "Dosya";
+  $("subtitle").textContent = `${safe(session.user.full_name)} = ${safe(session.user.role)} • ${safe(session.user.team)}`;
+
+  $("company").textContent = safe(c.account_name);
+  $("caseId").textContent = safe(c.case_id);
+  $("meta").innerHTML =
+    `<span class="mono">${htmlEscape(safe(c.account_code))}</span>` +
+    ` <span class="mx-2 text-zinc-600">•</span> ` +
+    `Stage: <span class="mono">${htmlEscape(safe(c.stage))}</span>` +
+    ` <span class="mx-2 text-zinc-600">•</span> ` +
+    `Lock: <span class="mono">${htmlEscape(safe(c.lock_reason || ""))}</span>`;
+
+  $("overdue").textContent = fmtTRY(c.overdue_balance);
+  $("balance").textContent = fmtTRY(c.balance);
+
+  const promiseText = safe(c.last_promise_date || "");
+  $("promise").textContent = promiseText === "—" || promiseText === "" ? "—" : promiseText;
+
+  $("postpone").textContent = `${num(c.postpone_used)}/${num(c.postpone_limit)}`;
+
+  $("stageDot").className = "stageDot " + stageDotClass(c.stage);
+  $("stageText").textContent = stageLabel(c.stage);
+  $("owner").textContent = safe(c.owner_user_id);
+  $("broken").textContent = String(num(c.broken_promise_count));
+  $("status").textContent = safe(c.status);
+
+  $("email").textContent = safe(c.email);
+  $("phone").textContent = safe(c.phone);
+  $("tags").textContent = safe(c.customer_tags);
+
+  // Banner if locked
+  if (c.lock_reason){
+    $("banner").classList.remove("hidden");
+    $("bannerText").textContent = `lock_reason=${c.lock_reason} • stage=${c.stage}`;
+  } else {
+    $("banner").classList.add("hidden");
+  }
+
+  // Me chip
+  $("meChip").textContent = `${session.user.user_id} • ${session.user.role}`;
+
+  // Disable UI by rules:
+  const stage = String(c.stage || "").toLowerCase();
+  const locked = !!c.lock_reason;
+
+  // Promise:
+  // - اگر قبلاً promise داده شده، یا stage=cerceve => غیر فعال
+  const hasPromise = !!c.last_promise_date;
+  $("btnPromise").disabled = hasPromise || stage === "cerceve" || locked;
+
+  // Postpone:
+  // - اگر locked یا stage=cerceve => غیر فعال
+  $("btnPostpone").disabled = locked || stage === "cerceve" || !hasPromise;
+
+  // Payments/Notes: در MVP آزاد (اگر خواستی بعداً محدود می‌کنیم)
+  $("btnPayment").disabled = false;
+  $("btnNote").disabled = false;
+
+  // Details block (show important CASES columns)
+  renderDetails(c);
+}
+
+function renderDetails(c){
+  // لیست ستون‌هایی که گفتی
+  const keys = [
+    "case_id","account_code","account_name","type_code","group_code","stage","owner_user_id","status",
+    "balance","overdue_balance","debt_amount","credit_amount",
+    "last_collection_date","last_collection_amount","last_collection_type",
+    "days_since_last_collection","days_since_last_payment","last_payment_amount",
+    "customer_risk","own_risk",
+    "avg_debt_maturity","avg_credit_maturity","avg_balance_maturity",
+    "avg_collection_time",
+    "last_promise_date","promise_amount",
+    "postpone_limit","postpone_used","last_postpone_date",
+    "lock_reason","broken_promise_count",
+    "email","phone","customer_tags",
+    "created_at","updated_at","last_payment_date"
+  ];
+
+  // فرمت بهتر برای اعداد پولی
+  const moneyKeys = new Set(["balance","overdue_balance","debt_amount","credit_amount","last_collection_amount","last_payment_amount","promise_amount"]);
+  const details = $("details");
+  details.innerHTML = "";
+
+  keys.forEach(k=>{
+    const v = c[k];
+    const val =
+      moneyKeys.has(k) ? fmtTRY(v) :
+      safe(v);
+
+    const row = document.createElement("div");
+    row.className = "krow";
+    row.innerHTML = `
+      <div class="kkey">${htmlEscape(k)}</div>
+      <div class="kval ${moneyKeys.has(k) ? "mono" : "mono"}">${htmlEscape(val)}</div>
+    `;
+    details.appendChild(row);
+  });
+}
+
+/** =========================
+ *  6) Render: Timeline
+ *  ========================= */
+function renderTimeline(items){
+  $("tlCount").textContent = `${items.length} kayıt`;
+  const tb = $("timeline");
+  tb.innerHTML = "";
+
+  items.forEach(a=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">${htmlEscape(safe(a.action_date_time))}</td>
+      <td class="mono">${htmlEscape(safe(a.action_type))}</td>
+      <td class="mono">${htmlEscape(safe(a.created_by_user_id))}</td>
+      <td class="mono">${htmlEscape(safe(a.channel))}</td>
+      <td>${htmlEscape(safe(a.note))}</td>
+      <td class="mono">${a.amount === "" ? "—" : htmlEscape(fmtTRY(a.amount))}</td>
+      <td class="mono">${htmlEscape(safe(a.promise_date))}</td>
+      <td class="mono">${htmlEscape(safe(a.system_flag))}</td>
+      <td class="mono">${htmlEscape(safe(a.result))}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+/** =========================
+ *  7) Actions
+ *  ========================= */
+function mustSession(){
+  session = loadSession();
+  if (!session || !session.user || !session.token){
+    window.location.href = LOGIN_PAGE;
+    return false;
+  }
+  return true;
+}
+
+async function createPromise(){
+  const p_date = $("p_date").value;
+  const p_amount = $("p_amount").value;
+  const p_channel = $("p_channel").value;
+  const p_note = $("p_note").value;
+
+  if (!p_date) return showToast("Promise tarihi zorunlu");
+  if (!p_amount) return showToast("Tutar zorunlu");
+
+  const u = session.user;
+  const data = await apiPost({
+    action:"createPromise",
+    user_id:u.user_id, role:u.role, team:u.team, token:session.token,
+    case_id:caseId,
+    promise_date:p_date,
+    amount:p_amount,
+    channel:p_channel,
+    note:p_note
+  });
+
+  if (!data.ok) throw new Error(data.error || "createPromise failed");
+  showToast("Promise kaydedildi");
+  await loadDetail();
+}
+
+async function createPostpone(){
+  const pp_date = $("pp_date").value;
+  const pp_reason = $("pp_reason").value;
+  const pp_channel = $("pp_channel").value;
+  const pp_note = $("pp_note").value;
+
+  if (!pp_date) return showToast("Erteleme tarihi zorunlu");
+
+  const u = session.user;
+  const data = await apiPost({
+    action:"createPostpone",
+    user_id:u.user_id, role:u.role, team:u.team, token:session.token,
+    case_id:caseId,
+    new_date:pp_date,
+    reason:pp_reason,
+    channel:pp_channel,
+    note:pp_note
+  });
+
+  if (!data.ok) throw new Error(data.error || "createPostpone failed");
+  showToast("Erteleme kaydedildi");
+  await loadDetail();
+}
+
+async function createPayment(){
+  const pay_amount = $("pay_amount").value;
+  const pay_type = $("pay_type").value;
+  const pay_channel = $("pay_channel").value;
+  const pay_note = $("pay_note").value;
+
+  if (!pay_amount) return showToast("Ödeme tutarı zorunlu");
+
+  const u = session.user;
+  const data = await apiPost({
+    action:"createPayment",
+    user_id:u.user_id, role:u.role, team:u.team, token:session.token,
+    case_id:caseId,
+    amount:pay_amount,
+    payment_type:pay_type,
+    channel:pay_channel,
+    note:pay_note
+  });
+
+  if (!data.ok) throw new Error(data.error || "createPayment failed");
+  showToast("Ödeme kaydedildi");
+  await loadDetail();
+}
+
+async function createNote(){
+  const n_channel = $("n_channel").value;
+  const n_note = $("n_note").value;
+
+  if (!n_note) return showToast("Not zorunlu");
+
+  const u = session.user;
+  const data = await apiPost({
+    action:"createNote",
+    user_id:u.user_id, role:u.role, team:u.team, token:session.token,
+    case_id:caseId,
+    channel:n_channel,
+    note:n_note
+  });
+
+  if (!data.ok) throw new Error(data.error || "createNote failed");
+  showToast("Not kaydedildi");
+  await loadDetail();
+}
+
+/** =========================
+ *  8) Init
+ *  ========================= */
+async function init(){
+  if (!mustSession()) return;
+
+  caseId = qs("case_id");
+  if (!caseId){
+    showToast("case_id yok");
+    setTimeout(()=> window.location.href = LIST_PAGE, 600);
+    return;
+  }
+
+  $("btnLogout").addEventListener("click", ()=>{
+    clearSession();
+    window.location.href = LOGIN_PAGE;
+  });
+
+  $("btnRefresh").addEventListener("click", async ()=>{
+    try {
+      await loadDetail();
+      showToast("Yenilendi");
+    } catch(e){
+      alert("Hata: " + (e.message || e));
+    }
+  });
+
+  $("btnPromise").addEventListener("click", async ()=>{
+    try { await createPromise(); } catch(e){ alert("Hata: " + (e.message || e)); }
+  });
+
+  $("btnPostpone").addEventListener("click", async ()=>{
+    try { await createPostpone(); } catch(e){ alert("Hata: " + (e.message || e)); }
+  });
+
+  $("btnPayment").addEventListener("click", async ()=>{
+    try { await createPayment(); } catch(e){ alert("Hata: " + (e.message || e)); }
+  });
+
+  $("btnNote").addEventListener("click", async ()=>{
+    try { await createNote(); } catch(e){ alert("Hata: " + (e.message || e)); }
+  });
+
+  try {
+    await loadDetail();
+  } catch(e){
+    // اگر "Failed to fetch" شد، خیلی احتمال دارد شما روی دامنه‌ی بدون www بوده‌اید یا WebApp در دسترس نیست
+    alert("Hata: " + (e.message || e));
+  }
+}
+
+init();
+</script>
+</body>
+</html>
