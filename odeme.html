@@ -853,317 +853,328 @@
     </div>
    </main>
   </div>
-  <script>
-  /***********************
-   * CoRM Payment Portal (Dynamic)
-   * Reads: token + case_id from URL
-   * Calls: getPayContext, setDebtorDate, debtorPaymentNotice
-   ***********************/
+<script>
+/** =========================
+ *  REAL CONFIG
+ *  ========================= */
+const WEBAPP_URL = "/api/corm";
 
-  const WEBAPP_URL = "/api/corm";
+/** =========================
+ *  Helpers
+ *  ========================= */
+const $ = (id) => document.getElementById(id);
 
-  const qs = (k) => new URL(location.href).searchParams.get(k) || "";
+function qs(name){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name) || "";
+}
+
+function moneyTRY(n){
+  const x = Number(n);
+  const v = Number.isFinite(x) ? x : 0;
+  return v.toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ₺";
+}
+
+function setText(id, txt){
+  const el = $(id);
+  if (el) el.textContent = txt ?? "";
+}
+
+function toastGreen(msg){
+  const div = document.createElement("div");
+  div.style.cssText = "position:fixed;top:20px;right:20px;background:rgba(134,239,172,.18);border:1px solid rgba(134,239,172,.5);color:#86efac;padding:12px 16px;border-radius:8px;font-size:11px;font-weight:700;z-index:9999;";
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(), 2200);
+}
+
+function toastRed(msg){
+  const div = document.createElement("div");
+  div.style.cssText = "position:fixed;top:20px;right:20px;background:rgba(220,38,38,.18);border:1px solid rgba(220,38,38,.55);color:#fca5a5;padding:12px 16px;border-radius:8px;font-size:11px;font-weight:700;z-index:9999;";
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(), 2600);
+}
+
+async function apiPost(payload){
+  const res = await fetch(WEBAPP_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return await res.json();
+}
+
+/** =========================
+ *  State
+ *  ========================= */
+let portalData = null;
+let selectedMethod = null;
+
+/** =========================
+ *  Render
+ *  ========================= */
+function applyPaymentMethodUI(){
+  document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.payment-details').forEach(p => p.classList.remove('show'));
+
+  if (selectedMethod){
+    const card = document.querySelector(`.payment-method-card[data-method="${selectedMethod}"]`);
+    if (card) card.classList.add('selected');
+    const panel = document.getElementById("details-" + selectedMethod);
+    if (panel) panel.classList.add('show');
+
+    const btn = document.getElementById("btn-complete");
+    if (btn) btn.disabled = false;
+  }
+}
+
+function setRightsUI(remaining, limit, maxDays){
+  const rightsBox = document.getElementById('rights-box');
+  const rightsDisplay = document.getElementById('rights-display');
+  const btnPostpone = document.getElementById('btn-postpone');
+  const dateInput = document.getElementById('postpone-date');
+  const reasonSel = document.getElementById('postpone-reason');
+  const desc = document.getElementById('postpone-description');
+  const warningsDiv = document.getElementById('postpone-warnings');
+
+  // hint text
+  const hint = document.querySelector(".form-hint");
+  if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${maxDays} gün`;
+
+  // date constraints
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + maxDays);
+  dateInput.min = today.toISOString().split('T')[0];
+  dateInput.max = maxDate.toISOString().split('T')[0];
+
+  rightsDisplay.textContent = `${remaining} / ${limit}`;
+  if (remaining <= 0){
+    rightsBox.classList.add('depleted');
+    rightsDisplay.classList.add('depleted');
+    btnPostpone.disabled = true;
+    dateInput.disabled = true;
+    reasonSel.disabled = true;
+    desc.disabled = true;
+    warningsDiv.innerHTML = '<div class="alert-box danger">Erteleme hakkınız kalmamıştır. Ödeme yapmanız gerekmektedir.</div>';
+  } else {
+    rightsBox.classList.remove('depleted');
+    rightsDisplay.classList.remove('depleted');
+    dateInput.disabled = false;
+    reasonSel.disabled = false;
+    desc.disabled = false;
+    warningsDiv.innerHTML = '';
+    btnPostpone.disabled = true; // until valid
+  }
+}
+
+function setAmountUI(amountToPay, dueDateStr){
+  // amount value is inside .amount-value (no id). We'll locate it.
+  const amountEl = document.querySelector(".amount-value");
+  if (amountEl) amountEl.textContent = moneyTRY(amountToPay);
+
+  const badge = document.querySelector(".status-badge");
+  if (!badge) return;
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+  if (dueDateStr && todayStr === dueDateStr){
+    badge.classList.remove("overdue");
+    badge.classList.add("due-today");
+    badge.textContent = "Bugün ödenmesi bekleniyor";
+  } else if (dueDateStr && todayStr > dueDateStr){
+    badge.classList.remove("due-today");
+    badge.classList.add("overdue");
+    badge.textContent = "Vade geçti";
+  } else {
+    badge.classList.remove("overdue");
+    badge.classList.add("due-today");
+    badge.textContent = "Vade bekleniyor";
+  }
+}
+
+/** =========================
+ *  Load portal data
+ *  ========================= */
+async function loadPortal(){
   const token = qs("token");
   const caseId = qs("case_id");
 
-  const $ = (id) => document.getElementById(id);
-
-  function fmtTRY(n){
-    const x = Number(n);
-    const v = Number.isFinite(x) ? x : 0;
-    return v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
-  }
-  function isoToTr(iso){
-    if (!iso) return "-";
-    // yyyy-mm-dd => dd.mm.yyyy
-    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso.slice(8,10)+"."+iso.slice(5,7)+"."+iso.slice(0,4);
-    return iso;
-  }
-  function toast(msg, ok=true){
-    const message = document.createElement('div');
-    message.style.cssText =
-      'position: fixed; top: 20px; right: 20px; background: ' + (ok ? 'rgba(134,239,172,0.2)' : 'rgba(252,165,165,0.15)') +
-      '; border: 1px solid ' + (ok ? '#86efac' : '#fca5a5') +
-      '; color: ' + (ok ? '#86efac' : '#fca5a5') +
-      '; padding: 12px 20px; border-radius: 6px; font-size: 11px; font-weight: 600; z-index: 1000;';
-    message.textContent = msg;
-    document.body.appendChild(message);
-    setTimeout(() => message.remove(), 2500);
+  if (!token || !caseId){
+    toastRed("Eksik parametre: token / case_id");
+    return;
   }
 
-  async function apiPost(payload){
-    const res = await fetch(WEBAPP_URL, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return await res.json();
+  const data = await apiPost({ action:"getPayPortal", token, case_id: caseId });
+  if (!data.ok) throw new Error(data.error || "getPayPortal failed");
+
+  portalData = data;
+
+  // Header date
+  const todayTop = document.querySelector("header .text-xs.text-zinc-500.font-heading");
+  if (todayTop && data.portal && data.portal.today) todayTop.textContent = data.portal.today.split("-").reverse().join(".");
+
+  // Main texts
+  setText("company-name", data.case.account_name || "-");
+  setText("account-code", data.case.account_code || "-");
+  setText("file-number", data.case.case_id || "-");
+  setText("responsible", data.case.owner_name || data.case.owner_user_id || "-");
+
+  setAmountUI(data.case.amount_to_pay, data.case.due_date);
+
+  // Rules + rights
+  setRightsUI(
+    data.portal.remaining_rights,
+    data.portal.postpone_limit,
+    data.portal.max_postpone_days
+  );
+
+  // If expired, show info and disable actions
+  if (data.portal.expired){
+    const warningsDiv = document.getElementById('postpone-warnings');
+    warningsDiv.innerHTML = '<div class="alert-box info">Bilgi: Ödeme bağlantısının geçerlilik süresi dolmuş olabilir. Lütfen sorumlu kişiyle iletişime geçin.</div>';
+    document.getElementById("btn-complete").disabled = true;
+    document.getElementById("btn-postpone").disabled = true;
   }
 
-  // Payment method selection
-  let selectedMethod = null;
-  document.querySelectorAll('.payment-method-card').forEach(card => {
-    card.addEventListener('click', function() {
-      document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
-      this.classList.add('selected');
+  // Paid => lock UI
+  if (data.case.is_paid){
+    toastGreen("Bu dosya ödenmiş görünüyor.");
+    document.getElementById("btn-complete").disabled = true;
+    document.getElementById("btn-postpone").disabled = true;
+  }
+}
 
-      document.querySelectorAll('.payment-details').forEach(panel => panel.classList.remove('show'));
-      const method = this.getAttribute('data-method');
-      selectedMethod = method;
-      const detailPanel = document.getElementById('details-' + method);
-      if (detailPanel) detailPanel.classList.add('show');
-
-      $("btn-complete").disabled = false;
-    });
+/** =========================
+ *  Payment selection
+ *  ========================= */
+document.querySelectorAll('.payment-method-card').forEach(card => {
+  card.addEventListener('click', function() {
+    selectedMethod = this.getAttribute('data-method');
+    applyPaymentMethodUI();
   });
+});
 
-  function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => toast('✓ Kopyalandı', true)).catch(() => toast('Kopyalama başarısız', false));
-  }
-  window.copyToClipboard = copyToClipboard;
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => toastGreen("✓ Kopyalandı")).catch(() => toastRed("Kopyalama başarısız"));
+}
 
-  function handleOnlinePayment(){
-    toast("Güvenli ödeme sayfasına yönlendiriliyorsunuz...", true);
-  }
-  window.handleOnlinePayment = handleOnlinePayment;
-
-  let ctx = null; // {case, portal}
-
-  function setStatusBadge(caseObj){
-    // Basic badge rule: today due => due-today, overdue => overdue
-    const badge = document.querySelector(".status-badge");
-    if (!badge) return;
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    const dueIso = (caseObj.due_date || "").slice(0,10);
-    let dueDate = null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dueIso)) {
-      dueDate = new Date(dueIso + "T00:00:00");
-    }
-
-    badge.classList.remove("due-today","overdue");
-    if (dueDate && dueDate.getTime() === today.getTime()){
-      badge.classList.add("due-today");
-      badge.textContent = "Bugün ödenmesi bekleniyor";
-    } else if (dueDate && dueDate.getTime() < today.getTime()){
-      badge.classList.add("overdue");
-      badge.textContent = "Vade geçti";
-    } else {
-      badge.classList.add("due-today");
-      badge.textContent = "Ödeme bekleniyor";
-    }
-  }
-
-  function applyPayInfo(payInfo, caseObj){
-    // Wire panel fill (if you set Script Properties)
-    const bankName = payInfo.bank_name || "—";
-    const iban = payInfo.iban || "—";
-    const receiver = payInfo.receiver || "—";
-
-    // Replace hardcoded values inside wire panel
-    const wire = $("details-wire");
-    if (wire) {
-      const nodes = wire.querySelectorAll(".detail-value");
-      // expected order: Banka Adı, IBAN, Alıcı Ünvan, Açıklama
-      if (nodes[0]) nodes[0].textContent = bankName;
-      if (nodes[1]) nodes[1].textContent = iban;
-      if (nodes[2]) nodes[2].textContent = receiver;
-
-      const desc = `${caseObj.account_code || ""} – ${caseObj.case_id || ""}`.trim();
-      if (nodes[3]) nodes[3].textContent = desc || "—";
-
-      // Update copy buttons handlers to dynamic values
-      const btns = wire.querySelectorAll(".copy-button");
-      if (btns[0]) btns[0].onclick = () => copyToClipboard(iban);
-      if (btns[1]) btns[1].onclick = () => copyToClipboard(desc);
-    }
-  }
-
-  function initPostponeUI(){
-    const caseObj = ctx.case;
-    const p = ctx.portal;
-
-    const remain = Math.max(0, Number(p.postpone_limit) - Number(p.postpone_used));
-    const max = Number(p.postpone_limit);
-
-    const rightsBox = $("rights-box");
-    const rightsDisplay = $("rights-display");
-    if (rightsDisplay) rightsDisplay.textContent = `${remain} / ${max}`;
-
-    // max days rule
-    const maxDays = Number(p.max_postpone_days) || 7;
-    const dateInput = $("postpone-date");
-
-    const today = new Date();
-    const maxDate = new Date();
-    maxDate.setDate(today.getDate() + maxDays);
-
-    dateInput.min = today.toISOString().split('T')[0];
-    dateInput.max = maxDate.toISOString().split('T')[0];
-
-    // If no rights -> disable
-    const reasonSel = $("postpone-reason");
-    const desc = $("postpone-description");
-    const btn = $("btn-postpone");
-
-    if (remain <= 0){
-      rightsBox.classList.add("depleted");
-      rightsDisplay.classList.add("depleted");
-      rightsDisplay.textContent = "Erteleme Hakkı Doldu";
-      dateInput.disabled = true;
-      reasonSel.disabled = true;
-      desc.disabled = true;
-      btn.disabled = true;
-      $("postpone-warnings").innerHTML = '<div class="alert-box danger">Erteleme hakkınız kalmamıştır. Ödeme yapmanız gerekmektedir.</div>';
-      return;
-    }
-
-    // validate on change
-    function validate(){
-      const date = dateInput.value;
-      const reason = reasonSel.value;
-      btn.disabled = !(date && reason);
-    }
-
-    dateInput.addEventListener("change", validate);
-    reasonSel.addEventListener("change", validate);
-
-    // expose submit handler
-    window.submitPostponeRequest = async function(){
-      const date = dateInput.value;
-      const reason = reasonSel.value;
-      const note = desc.value;
-
-      if (!date || !reason) return;
-
-      btn.disabled = true;
-      const oldText = btn.textContent;
-      btn.textContent = "GÖNDERILIYOR...";
-
-      try {
-        const r = await apiPost({
-          action: "setDebtorDate",
-          case_id: caseId,
-          token,
-          debtor_date: date,
-          reason,
-          note
-        });
-        if (!r.ok) throw new Error(r.error || "setDebtorDate failed");
-
-        toast("✓ Erteleme kaydedildi", true);
-
-        // refresh context
-        await loadContext();
-
-        // reset inputs
-        dateInput.value = "";
-        reasonSel.value = "";
-        desc.value = "";
-      } catch(e){
-        toast("Hata: " + (e.message || e), false);
-      } finally {
-        btn.textContent = oldText;
-        // re-evaluate enabled state
-        btn.disabled = true;
-      }
-    };
-  }
-
-  window.completePayment = async function(){
+async function completePayment(){
+  try{
+    if (!portalData) return;
     if (!selectedMethod) return;
 
-    const btn = $("btn-complete");
+    const token = qs("token");
+    const caseId = qs("case_id");
+    const amount = portalData.case.amount_to_pay;
+
+    const btn = document.getElementById("btn-complete");
     btn.disabled = true;
-    const oldText = btn.textContent;
+    const old = btn.textContent;
     btn.textContent = "İŞLENİYOR...";
 
-    try {
-      const r = await apiPost({
-        action: "debtorPaymentNotice",
-        case_id: caseId,
-        token,
-        method: selectedMethod,
-        note: ""
-      });
-      if (!r.ok) throw new Error(r.error || "debtorPaymentNotice failed");
+    const resp = await apiPost({
+      action: "portalConfirmPayment",
+      token,
+      case_id: caseId,
+      method: selectedMethod,
+      amount
+    });
 
-      toast("✓ Bildiriminiz alındı (ekip kontrol edecek)", true);
+    if (!resp.ok) throw new Error(resp.error || "portalConfirmPayment failed");
 
-      // UX: show modal message (existing style)
-      const message = document.createElement('div');
-      message.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #18181b; border: 1px solid #27272a; padding: 32px; border-radius: 8px; text-align: center; z-index: 1000; max-width: 400px;';
-      message.innerHTML = `
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 16px;">
-          <circle cx="24" cy="24" r="22" stroke="#86efac" stroke-width="2"/>
-          <path d="M14 24L20 30L34 16" stroke="#86efac" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div style="font-size: 16px; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;">Bildirim Alındı</div>
-        <div style="font-size: 12px; color: #a1a1aa; line-height: 1.5;">
-          Ödeme bildiriminiz kaydedildi. Ekibimiz kontrol ettikten sonra dosya güncellenecektir.
-        </div>
-      `;
-      document.body.appendChild(message);
-      setTimeout(()=>message.remove(), 3000);
+    toastGreen("✓ Ödeme kaydı alındı");
+    btn.textContent = "ÖDENDİ";
+    // lock other actions
+    document.getElementById("btn-postpone").disabled = true;
 
-    } catch(e){
-      toast("Hata: " + (e.message || e), false);
-    } finally {
-      btn.textContent = oldText;
-      btn.disabled = false;
-    }
-  };
-
-  async function loadContext(){
-    if (!token || !caseId){
-      toast("Geçersiz bağlantı (token/case_id yok)", false);
-      return;
-    }
-    const data = await apiPost({ action:"getPayContext", case_id: caseId, token });
-    if (!data.ok) throw new Error(data.error || "getPayContext failed");
-    ctx = data;
-
-    const c = ctx.case;
-    const p = ctx.portal;
-
-    // Fill header / basic
-    $("company-name").textContent = c.account_name || "-";
-    $("account-code").textContent = c.account_code || "-";
-    $("file-number").textContent = c.case_id || "-";
-    $("responsible").textContent = p.owner_full_name || String(c.owner_user_id || "-");
-
-    // Amount section
-    const amountEl = document.querySelector(".amount-value");
-    if (amountEl) amountEl.textContent = fmtTRY(p.amount_due);
-
-    // Description text
-    const desc = document.querySelector(".amount-description");
-    if (desc){
-      if (Number(c.promise_amount) > 0) desc.textContent = "Bu tutar sistemde kayıtlı son tahsilat sözüdür.";
-      else desc.textContent = "Bu tutar geciken/aktif bakiye üzerinden hesaplanmıştır.";
-    }
-
-    setStatusBadge(c);
-    applyPayInfo(p.pay_info || {}, c);
-
-    // Postpone rules text dynamic
-    const hint = document.querySelector(".form-hint");
-    if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${p.max_postpone_days} gün`;
-
-    // Init postpone section
-    initPostponeUI();
+  } catch(e){
+    toastRed("Hata: " + (e.message || e));
+    const btn = document.getElementById("btn-complete");
+    btn.disabled = false;
+    btn.textContent = "ÖDEMEYİ TAMAMLA";
   }
+}
 
-  // On load
-  (async function init(){
-    try {
-      await loadContext();
-    } catch(e){
-      toast("Hata: " + (e.message || e), false);
-    }
-  })();
+window.completePayment = completePayment;
+window.copyToClipboard = copyToClipboard;
+
+/** =========================
+ *  Postpone (Debtor selected date)
+ *  ========================= */
+function validatePostponeForm(){
+  const remaining = portalData?.portal?.remaining_rights ?? 0;
+  const date = document.getElementById('postpone-date').value;
+  const reason = document.getElementById('postpone-reason').value;
+  const btn = document.getElementById('btn-postpone');
+  btn.disabled = !(remaining > 0 && date && reason && !(portalData?.portal?.expired) && !(portalData?.case?.is_paid));
+}
+
+document.getElementById('postpone-date').addEventListener('change', validatePostponeForm);
+document.getElementById('postpone-reason').addEventListener('change', validatePostponeForm);
+
+async function submitPostponeRequest(){
+  try{
+    if (!portalData) return;
+
+    const token = qs("token");
+    const caseId = qs("case_id");
+    const date = document.getElementById('postpone-date').value;
+    const reason = document.getElementById('postpone-reason').value;
+    const note = document.getElementById('postpone-description').value;
+
+    if (!date || !reason) return;
+
+    const btn = document.getElementById('btn-postpone');
+    btn.disabled = true;
+    const old = btn.textContent;
+    btn.textContent = "GÖNDERILIYOR...";
+
+    const resp = await apiPost({
+      action: "portalPostpone",
+      token,
+      case_id: caseId,
+      new_date: date,
+      reason,
+      note
+    });
+
+    if (!resp.ok) throw new Error(resp.error || "portalPostpone failed");
+
+    toastGreen("✓ Erteleme kaydedildi");
+
+    // update local rights
+    portalData.portal.postpone_used = resp.postpone_used;
+    portalData.portal.remaining_rights = resp.remaining_rights;
+
+    setRightsUI(resp.remaining_rights, resp.postpone_limit, portalData.portal.max_postpone_days);
+
+    // clear form
+    document.getElementById('postpone-date').value = '';
+    document.getElementById('postpone-reason').value = '';
+    document.getElementById('postpone-description').value = '';
+
+    btn.textContent = "ERTELEME TALEBİ GÖNDER";
+    btn.disabled = true;
+
+  } catch(e){
+    toastRed("Hata: " + (e.message || e));
+    const btn = document.getElementById('btn-postpone');
+    btn.textContent = "ERTELEME TALEBİ GÖNDER";
+    validatePostponeForm();
+  }
+}
+
+window.submitPostponeRequest = submitPostponeRequest;
+
+/** =========================
+ *  Init
+ *  ========================= */
+loadPortal().catch(e => toastRed("Hata: " + (e.message || e)));
 </script>
+
 
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c830edcb6762459',t:'MTc3MDEzMzU1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
