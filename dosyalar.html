@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { box-sizing:border-box; }
-    .chip { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#a1a1aa; }
     .sel, .inp {
       background:#111113; border:1px solid #27272a; color:#e4e4e7;
       padding:10px 12px; border-radius:10px; font-size:13px; outline:none;
@@ -32,7 +31,6 @@
     .s-bozuldu { background:#f97316; }
     .s-cerceve { background:#dc2626; }
     .s-x { background:#71717a; }
-    .muted { color:#a1a1aa; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .toggle { display:inline-flex; align-items:center; gap:10px; }
     .switch { position:relative; width:44px; height:24px; background:#27272a; border:1px solid #3f3f46; border-radius:999px; cursor:pointer; }
@@ -41,7 +39,6 @@
     .switch.on .knob { left:23px; background:#fff; }
   </style>
 </head>
-
 <body class="h-full">
   <div class="min-h-full w-full" style="background:#09090b;">
     <div class="max-w-6xl mx-auto px-6 py-8">
@@ -122,8 +119,8 @@
       </div>
 
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-200 text-sm hidden"></div>
 
+      <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-200 text-sm hidden"></div>
     </div>
   </div>
 
@@ -143,49 +140,40 @@
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Code</div>
           <input id="nc_account_code" class="inp w-full" placeholder="120.01.999" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Name</div>
           <input id="nc_account_name" class="inp w-full" placeholder="Firma Adı" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Collector (Owner)</div>
           <select id="nc_owner_user_id" class="sel w-full">
             <option value="">Yükleniyor...</option>
           </select>
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Due Date</div>
           <input id="nc_due_date" type="date" class="inp w-full" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Balance</div>
           <input id="nc_balance" class="inp w-full" placeholder="0" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Overdue Balance</div>
           <input id="nc_overdue_balance" class="inp w-full" placeholder="0 (gecikmişse negatif)" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Phone (TR)</div>
           <input id="nc_phone" class="inp w-full" placeholder="05xx..., 5xx..., +90..." />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Email</div>
           <input id="nc_email" class="inp w-full" placeholder="mail@firma.com" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Postpone Limit</div>
           <input id="nc_postpone_limit" class="inp w-full" placeholder="2" />
         </div>
-
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Type / Group</div>
           <input id="nc_type_group" class="inp w-full" placeholder="type_code | group_code (opsiyonel)" />
@@ -227,7 +215,7 @@
 
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Telefon</div>
-          <input id="nu_phone" class="inp w-full" placeholder="+90..." />
+          <input id="nu_phone" class="inp w-full" placeholder="05xx..., +90..." />
         </div>
 
         <div class="md:col-span-2">
@@ -242,7 +230,7 @@
 
       <div class="text-xs text-zinc-500 mt-3 leading-relaxed">
         Not: Kullanıcı rolü otomatik <span class="mono text-zinc-300">collector</span> olur.
-        <br/>Şifre SMS ile otomatik gönderilecektir.
+        <br/>Şifre: Sistem otomatik üretir ve SMS ile gönderir.
       </div>
     </div>
   </div>
@@ -254,18 +242,14 @@ const DETAIL_PAGE = "/dosyadetayi.html";
 const SESSION_KEY = "corm_session";
 const COOKIE_NAME = "corm_session";
 
-/** VALID VALUES */
 const SMS_STATES_ALLOWED = ["NEW","NO_PHONE","DEBTOR_DATE_SET","DUE_INFO_SENT","FINAL_SENT","LEGAL_SENT","PAID","PAYLINK_SENT"];
 const IS_PAID_ALLOWED = ["FALSE","TRUE"];
 
-/** STATE */
 let session = null;
 let allCases = [];
 
-/** DOM */
 const $ = (id) => document.getElementById(id);
 
-/** Toast */
 function toast(msg){
   const t = $("toast");
   t.textContent = msg;
@@ -273,7 +257,6 @@ function toast(msg){
   setTimeout(()=>t.classList.add("hidden"), 2500);
 }
 
-/** Cookie helpers */
 function getCookie(name){
   const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return m ? decodeURIComponent(m[2]) : null;
@@ -282,7 +265,6 @@ function delCookie(name){
   document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.arazad.xyz; SameSite=Lax; Secure`;
 }
 
-/** Session */
 function loadSession(){
   try {
     const raw = localStorage.getItem(SESSION_KEY);
@@ -306,7 +288,6 @@ function clearSession(){
   session = null;
 }
 
-/** API */
 async function apiPost(payload){
   const res = await fetch(WEBAPP_URL, {
     method: "POST",
@@ -319,38 +300,25 @@ async function apiPost(payload){
 
 async function loadCases(){
   const u = session.user;
-  const data = await apiPost({
-    action:"listCases",
-    user_id:u.user_id,
-    role:u.role,
-    team:u.team,
-    token: session.token
-  });
+  const data = await apiPost({ action:"listCases", user_id:u.user_id, role:u.role, team:u.team, token: session.token });
   if (!data.ok) throw new Error(data.error || "listCases failed");
   allCases = data.cases || [];
 }
 
-/** Role / permissions */
 function isMainAdmin(){
   return session?.user?.role === "admin";
 }
 
-/** Modal helpers */
-function openModalNewCase(){
-  $("modalNewCase").classList.remove("hidden");
-  $("modalNewCase").classList.add("flex");
+/** modals */
+function openModal(id){
+  const m = $(id);
+  m.classList.remove("hidden");
+  m.classList.add("flex");
 }
-function closeModalNewCase(){
-  $("modalNewCase").classList.add("hidden");
-  $("modalNewCase").classList.remove("flex");
-}
-function openModalNewCollector(){
-  $("modalNewCollector").classList.remove("hidden");
-  $("modalNewCollector").classList.add("flex");
-}
-function closeModalNewCollector(){
-  $("modalNewCollector").classList.add("hidden");
-  $("modalNewCollector").classList.remove("flex");
+function closeModal(id){
+  const m = $(id);
+  m.classList.add("hidden");
+  m.classList.remove("flex");
 }
 
 function parseTypeGroup(){
@@ -378,7 +346,7 @@ async function loadCollectorsIntoSelect(){
   ).join("");
 }
 
-/** UI utils */
+/** UI helpers */
 function stageLabel(stage){
   const s = String(stage||"").toLowerCase();
   if (s==="ilk") return "İlk Hatırlatma";
@@ -409,7 +377,6 @@ function isOverdue(c){
   return num(c.overdue_balance) < 0;
 }
 
-/** Filters */
 function buildOwnerFilter(){
   const map = new Map();
   allCases.forEach(c => {
@@ -420,13 +387,11 @@ function buildOwnerFilter(){
   });
 
   const sel = $("fOwner");
-  const items = [...map.entries()]
-    .map(([id, name]) => ({ id, name }))
-    .sort((a,b) => a.name.localeCompare(b.name, "tr"));
+  const items = [...map.entries()].map(([id,name])=>({id,name}))
+    .sort((a,b)=>a.name.localeCompare(b.name,"tr"));
 
-  sel.innerHTML =
-    `<option value="">Tümü</option>` +
-    items.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
+  sel.innerHTML = `<option value="">Tümü</option>` +
+    items.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");
 }
 
 function applyFilters(){
@@ -532,7 +497,6 @@ function renderCards(list){
   });
 }
 
-/** INIT */
 async function init(){
   session = loadSession();
   if (!session || !session.user || !session.token){
@@ -547,16 +511,12 @@ async function init(){
     window.location.href = "/index.html";
   });
 
-  // Modal close actions
-  $("btnCloseNewCase").addEventListener("click", closeModalNewCase);
-  $("modalNewCase").addEventListener("click", (e)=>{
-    if (e.target === $("modalNewCase")) closeModalNewCase();
-  });
+  // close modals
+  $("btnCloseNewCase").addEventListener("click", ()=>closeModal("modalNewCase"));
+  $("modalNewCase").addEventListener("click", (e)=>{ if (e.target === $("modalNewCase")) closeModal("modalNewCase"); });
 
-  $("btnCloseNewCollector").addEventListener("click", closeModalNewCollector);
-  $("modalNewCollector").addEventListener("click", (e)=>{
-    if (e.target === $("modalNewCollector")) closeModalNewCollector();
-  });
+  $("btnCloseNewCollector").addEventListener("click", ()=>closeModal("modalNewCollector"));
+  $("modalNewCollector").addEventListener("click", (e)=>{ if (e.target === $("modalNewCollector")) closeModal("modalNewCollector"); });
 
   // NEW CASE
   $("btnNewCase").addEventListener("click", async ()=>{
@@ -565,14 +525,13 @@ async function init(){
         toast("Sadece ana admin yeni dosya oluşturabilir.");
         return;
       }
-      openModalNewCase();
+      openModal("modalNewCase");
       await loadCollectorsIntoSelect();
     } catch(e){
       alert("Hata: " + (e.message || e));
     }
   });
 
-  // Create case
   $("btnCreateCase").addEventListener("click", async ()=>{
     try{
       if (!isMainAdmin()){
@@ -600,7 +559,13 @@ async function init(){
       const tg = parseTypeGroup();
       const u = session.user;
 
-      const payload = {
+      const sms_state = "NEW";
+      const is_paid = "FALSE";
+
+      if (!SMS_STATES_ALLOWED.includes(sms_state)) throw new Error("Invalid sms_state");
+      if (!IS_PAID_ALLOWED.includes(is_paid)) throw new Error("Invalid is_paid");
+
+      const resp = await apiPost({
         action: "createCase",
         user_id: u.user_id,
         role: u.role,
@@ -613,23 +578,19 @@ async function init(){
         due_date,
         phone,
         email,
-
         balance,
         overdue_balance,
         postpone_limit,
-
         type_code: tg.type_code,
         group_code: tg.group_code,
+        sms_state,
+        is_paid
+      });
 
-        sms_state: "NEW",
-        is_paid: "FALSE"
-      };
-
-      const resp = await apiPost(payload);
       if (!resp.ok) throw new Error(resp.error || "createCase failed");
 
       toast("Dosya oluşturuldu + SMS gönderildi");
-      closeModalNewCase();
+      closeModal("modalNewCase");
 
       await loadCases();
       buildOwnerFilter();
@@ -640,7 +601,7 @@ async function init(){
     }
   });
 
-  // NEW COLLECTOR open modal
+  // NEW COLLECTOR
   $("btnNewCollector").addEventListener("click", ()=>{
     if (!isMainAdmin()){
       toast("Sadece admin tahsilatçı ekleyebilir.");
@@ -650,12 +611,11 @@ async function init(){
     $("nu_email").value = "";
     $("nu_phone").value = "";
     $("nu_team").value = "";
-    openModalNewCollector();
+    openModal("modalNewCollector");
   });
 
-  // NEW COLLECTOR create
   $("btnCreateCollector").addEventListener("click", async ()=>{
-    try {
+    try{
       if (!isMainAdmin()){
         toast("Yetkiniz yok.");
         return;
@@ -678,7 +638,6 @@ async function init(){
         role: u.role,
         team: u.team,
         token: session.token,
-
         full_name,
         email,
         phone,
@@ -688,18 +647,18 @@ async function init(){
       if (!resp.ok) throw new Error(resp.error || "createCollector failed");
 
       toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
-      closeModalNewCollector();
+      closeModal("modalNewCollector");
 
-      // opsiyonel: yeni kişi case modalında görünsün
+      // refresh collectors list for New Case modal usage
       try { await loadCollectorsIntoSelect(); } catch {}
 
-    } catch (e) {
+    } catch(e){
       alert("Hata: " + (e.message || e));
     }
   });
 
   $("btnRefresh").addEventListener("click", async ()=>{
-    try {
+    try{
       await loadCases();
       buildOwnerFilter();
       applyFilters();
