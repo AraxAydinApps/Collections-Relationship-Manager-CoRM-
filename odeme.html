@@ -1,863 +1,422 @@
 <!doctype html>
 <html lang="tr" class="h-full">
- <head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoRM - Ödeme &amp; Erteleme</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Config from GitHub/Vercel -->
+  <script src="/corm_config.js"></script>
+
   <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+
   <style>
-    body {
-      box-sizing: border-box;
-    }
-    
-    .font-heading {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    .font-body {
-      font-family: 'Work Sans', sans-serif;
-    }
-    
-    /* Main payment card */
-    .payment-card {
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 8px;
-      padding: 40px;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    
-    /* Section dividers */
-    .section-divider {
-      height: 1px;
-      background-color: #27272a;
-      margin: 32px 0;
-    }
-    
-    /* Company info */
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-    }
-    
-    .info-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #71717a;
-      font-weight: 600;
-    }
-    
-    .info-value {
-      font-size: 13px;
-      color: #e4e4e7;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    /* Amount display */
-    .amount-container {
-      text-align: center;
-      padding: 32px 0;
-      background-color: #0f0f10;
-      border-radius: 6px;
-      border: 1px solid #27272a;
-    }
-    
-    .amount-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    
-    .amount-value {
-      font-size: 48px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      color: #e4e4e7;
-      line-height: 1;
-      margin-bottom: 12px;
-    }
-    
-    .amount-description {
-      font-size: 11px;
-      color: #a1a1aa;
-      line-height: 1.5;
-    }
-    
-    /* Status badge */
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-top: 12px;
-    }
-    
-    .status-badge.due-today {
-      background-color: rgba(234, 179, 8, 0.15);
-      color: #fde047;
-      border: 1px solid rgba(234, 179, 8, 0.3);
-    }
-    
-    .status-badge.overdue {
-      background-color: rgba(220, 38, 38, 0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(220, 38, 38, 0.3);
-    }
-    
-    /* Payment method cards */
-    .payment-methods {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-    
-    .payment-method-card {
-      background-color: #0f0f10;
-      border: 2px solid #27272a;
-      border-radius: 6px;
-      padding: 20px 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .payment-method-card:hover {
-      border-color: #3f3f46;
-      background-color: #18181b;
-    }
-    
-    .payment-method-card.selected {
-      border-color: #71717a;
-      background-color: #18181b;
-    }
-    
-    .payment-method-icon {
-      font-size: 28px;
-      margin-bottom: 12px;
-    }
-    
-    .payment-method-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #e4e4e7;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .payment-method-description {
-      font-size: 10px;
-      color: #71717a;
-      line-height: 1.4;
-    }
-    
-    /* Payment details area */
-    .payment-details {
-      background-color: #0f0f10;
-      border: 1px solid #27272a;
-      border-radius: 6px;
-      padding: 24px;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    .payment-details.show {
-      display: block;
-    }
-    
-    .detail-group {
-      margin-bottom: 16px;
-    }
-    
-    .detail-group:last-child {
-      margin-bottom: 0;
-    }
-    
-    .detail-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    
-    .detail-value {
-      font-size: 13px;
-      color: #e4e4e7;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 4px;
-      padding: 10px 14px;
-    }
-    
-    .copy-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background-color: #27272a;
-      border: 1px solid #3f3f46;
-      color: #e4e4e7;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 8px;
-    }
-    
-    .copy-button:hover {
-      background-color: #3f3f46;
-      border-color: #52525b;
-    }
-    
-    /* Main action button */
-    .btn-complete {
-      width: 100%;
-      background-color: #52525b;
-      border: 1px solid #71717a;
-      color: #e4e4e7;
-      padding: 16px 32px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 32px;
-    }
-    
-    .btn-complete:hover {
-      background-color: #71717a;
-      border-color: #a1a1aa;
-    }
-    
-    .btn-complete:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .btn-subtitle {
-      text-align: center;
-      font-size: 10px;
-      color: #71717a;
-      margin-top: 12px;
-      line-height: 1.5;
-    }
-    
-    /* Info panel */
-    .info-panel {
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 8px;
-      padding: 32px;
-      max-width: 720px;
-      margin: 24px auto 0;
-    }
-    
-    .info-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #27272a;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    .info-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    
-    .info-list li {
-      padding: 10px 0 10px 24px;
-      font-size: 12px;
-      color: #d4d4d8;
-      line-height: 1.6;
-      position: relative;
-    }
-    
-    .info-list li:before {
-      content: '•';
-      position: absolute;
-      left: 8px;
-      color: #71717a;
-      font-weight: 700;
-    }
-    
-    /* Security indicator */
-    .security-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      color: #86efac;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .payment-card {
-        padding: 24px;
-      }
-      
-      .payment-methods {
-        grid-template-columns: 1fr;
-      }
-      
-      .amount-value {
-        font-size: 36px;
-      }
-    }
-    
-    /* Scrollbar */
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .custom-scroll::-webkit-scrollbar-track {
-      background: #18181b;
-    }
-    
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: #3f3f46;
-      border-radius: 3px;
-    }
-    
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-      background: #52525b;
-    }
-    
-    /* Postpone Section */
-    .postpone-section {
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 8px;
-      padding: 32px;
-      max-width: 720px;
-      margin: 24px auto 0;
-    }
-    
-    .postpone-header {
-      text-align: center;
-      margin-bottom: 24px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #27272a;
-    }
-    
-    .postpone-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #e4e4e7;
-      margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    .postpone-subtitle {
-      font-size: 11px;
-      color: #a1a1aa;
-      line-height: 1.5;
-    }
-    
-    /* Rights indicator */
-    .rights-box {
-      background-color: #0f0f10;
-      border: 1px solid #27272a;
-      border-radius: 6px;
-      padding: 20px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    
-    .rights-box.depleted {
-      border-color: #dc2626;
-      background-color: rgba(220, 38, 38, 0.1);
-    }
-    
-    .rights-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    
-    .rights-display {
-      font-size: 36px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      color: #e4e4e7;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    
-    .rights-display.depleted {
-      color: #fca5a5;
-    }
-    
-    .rights-description {
-      font-size: 11px;
-      color: #a1a1aa;
-    }
-    
-    /* Form elements */
-    .form-group {
-      margin-bottom: 24px;
-    }
-    
-    .form-label {
-      display: block;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    
-    .form-input,
-    .form-select,
-    .form-textarea {
-      width: 100%;
-      background-color: #0f0f10;
-      border: 1px solid #27272a;
-      color: #e4e4e7;
-      padding: 12px 14px;
-      border-radius: 4px;
-      font-size: 12px;
-      outline: none;
-      transition: all 0.2s;
-      font-family: 'Work Sans', sans-serif;
-    }
-    
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-      border-color: #52525b;
-      background-color: #18181b;
-    }
-    
-    .form-input:disabled,
-    .form-select:disabled,
-    .form-textarea:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .form-textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    
-    .form-hint {
-      font-size: 10px;
-      color: #71717a;
-      margin-top: 6px;
-      font-style: italic;
-    }
-    
-    /* Warning alerts */
-    .alert-box {
-      padding: 14px 16px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      border-left: 3px solid;
-    }
-    
-    .alert-box.warning {
-      background-color: rgba(234, 179, 8, 0.1);
-      border-color: #eab308;
-      color: #fde047;
-    }
-    
-    .alert-box.danger {
-      background-color: rgba(220, 38, 38, 0.1);
-      border-color: #dc2626;
-      color: #fca5a5;
-    }
-    
-    .alert-box.info {
-      background-color: rgba(59, 130, 246, 0.1);
-      border-color: #3b82f6;
-      color: #93c5fd;
-    }
-    
-    /* Secondary button */
-    .btn-secondary {
-      width: 100%;
-      background-color: #27272a;
-      border: 1px solid #3f3f46;
-      color: #e4e4e7;
-      padding: 14px 32px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .btn-secondary:hover:not(:disabled) {
-      background-color: #3f3f46;
-      border-color: #52525b;
-    }
-    
-    .btn-secondary:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    
-    /* Rules panel */
-    .rules-panel {
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 8px;
-      padding: 32px;
-      max-width: 720px;
-      margin: 24px auto 0;
-    }
-    
-    .rules-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #71717a;
-      font-weight: 700;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #27272a;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    .rules-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 20px 0;
-    }
-    
-    .rules-list li {
-      padding: 10px 0 10px 24px;
-      font-size: 12px;
-      color: #d4d4d8;
-      line-height: 1.6;
-      position: relative;
-    }
-    
-    .rules-list li:before {
-      content: '•';
-      position: absolute;
-      left: 8px;
-      color: #71717a;
-      font-weight: 700;
-    }
-    
-    .rules-footer {
-      padding: 16px;
-      background-color: rgba(251, 191, 36, 0.1);
-      border-left: 3px solid #fbbf24;
-      border-radius: 4px;
-      text-align: center;
-      font-size: 12px;
-      color: #fde047;
-      font-weight: 600;
-      font-style: italic;
+    body { box-sizing: border-box; }
+    .font-heading { font-family: 'JetBrains Mono', monospace; }
+    .font-body { font-family: 'Work Sans', sans-serif; }
+
+    .payment-card{
+      background-color:#18181b;border:1px solid #27272a;border-radius:8px;
+      padding:40px;max-width:720px;margin:0 auto;
+    }
+    .section-divider{height:1px;background-color:#27272a;margin:32px 0;}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;}
+    .info-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:600;}
+    .info-value{font-size:13px;color:#e4e4e7;font-weight:600;font-family:'JetBrains Mono', monospace;}
+
+    .amount-container{
+      text-align:center;padding:32px 0;background-color:#0f0f10;border-radius:6px;border:1px solid #27272a;
+    }
+    .amount-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#71717a;font-weight:700;margin-bottom:12px;}
+    .amount-value{font-size:48px;font-weight:700;font-family:'JetBrains Mono', monospace;color:#e4e4e7;line-height:1;margin-bottom:12px;}
+    .amount-description{font-size:11px;color:#a1a1aa;line-height:1.5;}
+
+    .status-badge{
+      display:inline-flex;align-items:center;padding:6px 12px;border-radius:4px;
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:12px;
+    }
+    .status-badge.due-today{background-color:rgba(234,179,8,.15);color:#fde047;border:1px solid rgba(234,179,8,.3);}
+    .status-badge.overdue{background-color:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(220,38,38,.3);}
+    .status-badge.wait{background-color:rgba(59,130,246,.12);color:#93c5fd;border:1px solid rgba(59,130,246,.25);}
+    .status-badge.paid{background-color:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3);}
+
+    .payment-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
+    .payment-method-card{
+      background-color:#0f0f10;border:2px solid #27272a;border-radius:6px;padding:20px 16px;text-align:center;
+      cursor:pointer;transition:all .2s;
+    }
+    .payment-method-card:hover{border-color:#3f3f46;background-color:#18181b;}
+    .payment-method-card.selected{border-color:#71717a;background-color:#18181b;}
+    .payment-method-icon{font-size:28px;margin-bottom:12px;}
+    .payment-method-title{font-size:12px;font-weight:700;color:#e4e4e7;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+    .payment-method-description{font-size:10px;color:#71717a;line-height:1.4;}
+
+    .payment-details{
+      background-color:#0f0f10;border:1px solid #27272a;border-radius:6px;padding:24px;margin-top:20px;display:none;
+    }
+    .payment-details.show{display:block;}
+    .detail-group{margin-bottom:16px;}
+    .detail-group:last-child{margin-bottom:0;}
+    .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:700;margin-bottom:8px;}
+    .detail-value{
+      font-size:13px;color:#e4e4e7;font-weight:600;font-family:'JetBrains Mono', monospace;
+      background-color:#18181b;border:1px solid #27272a;border-radius:4px;padding:10px 14px;
+      word-break:break-word;
+    }
+    .copy-button{
+      display:inline-flex;align-items:center;gap:6px;background-color:#27272a;border:1px solid #3f3f46;color:#e4e4e7;
+      padding:8px 12px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+      cursor:pointer;transition:all .2s;margin-top:8px;
+    }
+    .copy-button:hover{background-color:#3f3f46;border-color:#52525b;}
+
+    .btn-complete{
+      width:100%;background-color:#52525b;border:1px solid #71717a;color:#e4e4e7;padding:16px 32px;border-radius:6px;
+      font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-top:32px;
+    }
+    .btn-complete:hover{background-color:#71717a;border-color:#a1a1aa;}
+    .btn-complete:disabled{opacity:.5;cursor:not-allowed;}
+    .btn-subtitle{text-align:center;font-size:10px;color:#71717a;margin-top:12px;line-height:1.5;}
+
+    .info-panel,.postpone-section,.rules-panel{
+      background-color:#18181b;border:1px solid #27272a;border-radius:8px;padding:32px;max-width:720px;margin:24px auto 0;
+    }
+    .info-title,.rules-title{
+      font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#71717a;font-weight:700;margin-bottom:20px;
+      padding-bottom:12px;border-bottom:1px solid #27272a;font-family:'JetBrains Mono', monospace;
+    }
+    .info-list,.rules-list{list-style:none;padding:0;margin:0 0 20px 0;}
+    .info-list li,.rules-list li{
+      padding:10px 0 10px 24px;font-size:12px;color:#d4d4d8;line-height:1.6;position:relative;
+    }
+    .info-list li:before,.rules-list li:before{
+      content:'•';position:absolute;left:8px;color:#71717a;font-weight:700;
+    }
+
+    .security-badge{display:flex;align-items:center;gap:6px;font-size:10px;color:#86efac;font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+
+    @media (max-width:768px){
+      .payment-card{padding:24px;}
+      .payment-methods{grid-template-columns:1fr;}
+      .amount-value{font-size:36px;}
+    }
+
+    .custom-scroll::-webkit-scrollbar{width:6px;}
+    .custom-scroll::-webkit-scrollbar-track{background:#18181b;}
+    .custom-scroll::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:3px;}
+    .custom-scroll::-webkit-scrollbar-thumb:hover{background:#52525b;}
+
+    .postpone-header{text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #27272a;}
+    .postpone-title{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e4e4e7;margin-bottom:8px;font-family:'JetBrains Mono', monospace;}
+    .postpone-subtitle{font-size:11px;color:#a1a1aa;line-height:1.5;}
+
+    .rights-box{background-color:#0f0f10;border:1px solid #27272a;border-radius:6px;padding:20px;margin-bottom:24px;text-align:center;}
+    .rights-box.depleted{border-color:#dc2626;background-color:rgba(220,38,38,.1);}
+    .rights-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:700;margin-bottom:12px;}
+    .rights-display{font-size:36px;font-weight:700;font-family:'JetBrains Mono', monospace;color:#e4e4e7;line-height:1;margin-bottom:8px;}
+    .rights-display.depleted{color:#fca5a5;}
+    .rights-description{font-size:11px;color:#a1a1aa;}
+
+    .form-group{margin-bottom:24px;}
+    .form-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:700;margin-bottom:10px;}
+    .form-input,.form-select,.form-textarea{
+      width:100%;background-color:#0f0f10;border:1px solid #27272a;color:#e4e4e7;padding:12px 14px;border-radius:4px;
+      font-size:12px;outline:none;transition:all .2s;font-family:'Work Sans', sans-serif;
+    }
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#52525b;background-color:#18181b;}
+    .form-input:disabled,.form-select:disabled,.form-textarea:disabled{opacity:.5;cursor:not-allowed;}
+    .form-textarea{min-height:80px;resize:vertical;}
+    .form-hint{font-size:10px;color:#71717a;margin-top:6px;font-style:italic;}
+
+    .alert-box{
+      padding:14px 16px;border-radius:4px;font-size:11px;font-weight:600;line-height:1.5;margin-bottom:20px;border-left:3px solid;
+    }
+    .alert-box.warning{background-color:rgba(234,179,8,.1);border-color:#eab308;color:#fde047;}
+    .alert-box.danger{background-color:rgba(220,38,38,.1);border-color:#dc2626;color:#fca5a5;}
+    .alert-box.info{background-color:rgba(59,130,246,.1);border-color:#3b82f6;color:#93c5fd;}
+    .alert-box.ok{background-color:rgba(34,197,94,.12);border-color:#22c55e;color:#86efac;}
+
+    .btn-secondary{
+      width:100%;background-color:#27272a;border:1px solid #3f3f46;color:#e4e4e7;padding:14px 32px;border-radius:6px;
+      font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;transition:all .2s;
+    }
+    .btn-secondary:hover:not(:disabled){background-color:#3f3f46;border-color:#52525b;}
+    .btn-secondary:disabled{opacity:.4;cursor:not-allowed;}
+
+    .rules-footer{
+      padding:16px;background-color:rgba(251,191,36,.1);border-left:3px solid #fbbf24;border-radius:4px;
+      text-align:center;font-size:12px;color:#fde047;font-weight:600;font-style:italic;
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
- </head>
- <body class="h-full font-body">
-  <div id="app-container" class="h-full w-full overflow-auto custom-scroll" style="background-color: #09090b;"><!-- Header -->
-   <header class="border-b" style="background-color: #18181b; border-color: #27272a;">
-    <div class="px-6 py-6 flex items-center justify-between"><!-- Left spacer -->
-     <div class="w-32"></div><!-- Center Logo & Title -->
-     <div class="flex flex-col items-center">
-      <div class="flex items-center justify-center mb-3">
-       <svg width="40" height="40" viewbox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" /> <rect x="18" y="2" width="12" height="12" stroke="#e4e4e7" stroke-width="1.5" fill="#e4e4e7" /> <rect x="2" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" /> <rect x="18" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" />
-       </svg>
+</head>
+
+<body class="h-full font-body">
+<div id="app-container" class="h-full w-full overflow-auto custom-scroll" style="background-color:#09090b;">
+
+  <header class="border-b" style="background-color:#18181b;border-color:#27272a;">
+    <div class="px-6 py-6 flex items-center justify-between">
+      <div class="w-32"></div>
+
+      <div class="flex flex-col items-center">
+        <div class="flex items-center justify-center mb-3">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" />
+            <rect x="18" y="2" width="12" height="12" stroke="#e4e4e7" stroke-width="1.5" fill="#e4e4e7" />
+            <rect x="2" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" />
+            <rect x="18" y="18" width="12" height="12" stroke="#71717a" stroke-width="1.5" fill="none" />
+          </svg>
+        </div>
+        <div class="font-heading text-xl font-bold tracking-tight text-zinc-100 mb-1">CoRM</div>
+        <div id="portal-name" class="text-xs text-zinc-500 tracking-wider">Tahsilat ve Ödeme Portalı</div>
       </div>
-      <div class="font-heading text-xl font-bold tracking-tight text-zinc-100 mb-1">
-       CoRM
+
+      <div class="w-32 flex flex-col items-end gap-2">
+        <div id="todayTop" class="text-xs text-zinc-500 font-heading">—</div>
+        <div class="security-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 5H3C2.44772 5 2 5.44772 2 6V9C2 9.55228 2.44772 10 3 10H9C9.55228 10 10 9.55228 10 9V6C10 5.44772 9.55228 5 9 5Z" stroke="#86efac" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 5V3.5C4 2.96957 4.21071 2.46086 4.58579 2.08579C4.96086 1.71071 5.46957 1.5 6 1.5C6.53043 1.5 7.03914 1.71071 7.41421 2.08579C7.78929 2.46086 8 2.96957 8 3.5V5" stroke="#86efac" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Güvenli Bağlantı
+        </div>
       </div>
-      <div id="portal-name" class="text-xs text-zinc-500 tracking-wider">
-       Tahsilat ve Ödeme Portalı
-      </div>
-     </div><!-- Right Info -->
-     <div class="w-32 flex flex-col items-end gap-2">
-      <div class="text-xs text-zinc-500 font-heading">
-       03.02.2026
-      </div>
-      <div class="security-badge">
-       <svg width="12" height="12" viewbox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 5H3C2.44772 5 2 5.44772 2 6V9C2 9.55228 2.44772 10 3 10H9C9.55228 10 10 9.55228 10 9V6C10 5.44772 9.55228 5 9 5Z" stroke="#86efac" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /> <path d="M4 5V3.5C4 2.96957 4.21071 2.46086 4.58579 2.08579C4.96086 1.71071 5.46957 1.5 6 1.5C6.53043 1.5 7.03914 1.71071 7.41421 2.08579C7.78929 2.46086 8 2.96957 8 3.5V5" stroke="#86efac" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
-       </svg> Güvenli Bağlantı
-      </div>
-     </div>
     </div>
-   </header><!-- Main Content -->
-   <main class="py-12 px-6"><!-- Payment Card -->
-    <div class="payment-card"><!-- Company Info -->
-     <div>
+  </header>
+
+  <main class="py-12 px-6">
+
+    <div class="payment-card">
       <div class="text-center mb-6">
-       <h1 id="page-title" class="font-heading text-2xl font-bold tracking-wide text-zinc-200 mb-2">ÖDEME &amp; ERTELEME</h1>
-       <p id="page-subtitle" class="text-sm text-zinc-500">Ödeme yap veya sınırlı süreli erteleme talep et</p>
+        <h1 id="page-title" class="font-heading text-2xl font-bold tracking-wide text-zinc-200 mb-2">ÖDEME &amp; ERTELEME</h1>
+        <p id="page-subtitle" class="text-sm text-zinc-500">Ödeme yap veya sınırlı süreli erteleme talep et</p>
       </div>
+
+      <div id="topAlert"></div>
+
       <div class="section-divider"></div>
+
       <div class="info-row">
-       <div class="info-label">
-        Firma/Kişi
-       </div>
-       <div id="company-name" class="info-value">
-        Yıldız Makina Ltd. Şti.
-       </div>
+        <div class="info-label">Firma/Kişi</div>
+        <div id="company-name" class="info-value">—</div>
       </div>
       <div class="info-row">
-       <div class="info-label">
-        Hesap Kodu
-       </div>
-       <div id="account-code" class="info-value">
-        120.01.001
-       </div>
+        <div class="info-label">Hesap Kodu</div>
+        <div id="account-code" class="info-value">—</div>
       </div>
       <div class="info-row">
-       <div class="info-label">
-        Dosya Numarası
-       </div>
-       <div id="file-number" class="info-value">
-        DYM-2026-0142
-       </div>
+        <div class="info-label">Dosya Numarası</div>
+        <div id="file-number" class="info-value">—</div>
       </div>
       <div class="info-row">
-       <div class="info-label">
-        Sorumlu
-       </div>
-       <div id="responsible" class="info-value">
-        Mehmet K.
-       </div>
+        <div class="info-label">Sorumlu</div>
+        <div id="responsible" class="info-value">—</div>
       </div>
-     </div>
-     <div class="section-divider"></div><!-- Amount Display -->
-     <div class="amount-container">
-      <div class="amount-label">
-       Ödenecek Tutar
+
+      <div class="section-divider"></div>
+
+      <div class="amount-container">
+        <div class="amount-label">Ödenecek Tutar</div>
+        <div class="amount-value" id="amountValue">—</div>
+        <div class="amount-description" id="amountDesc">Bu tutar sistemde kayıtlı son duruma göre hesaplanır.</div>
+        <div><span class="status-badge wait" id="statusBadge">—</span></div>
       </div>
-      <div class="amount-value">
-       ₺250.000,00
-      </div>
-      <div class="amount-description">
-       Bu tutar sistemde kayıtlı son tahsilat sözüdür.
-      </div>
-      <div><span class="status-badge due-today">Bugün ödenmesi bekleniyor</span>
-      </div>
-     </div>
-     <div class="section-divider"></div><!-- Payment Method Selection -->
-     <div>
-      <div class="info-label" style="margin-bottom: 16px;">
-       Ödeme Yöntemi Seçin
-      </div>
-      <div class="payment-methods">
-       <div class="payment-method-card" data-method="wire">
-        <div class="payment-method-icon">
-         <svg width="32" height="32" viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;"><path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /> <path d="M9 22V12H15V22" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-         </svg>
+
+      <div class="section-divider"></div>
+
+      <div>
+        <div class="info-label" style="margin-bottom:16px;">Ödeme Yöntemi Seçin</div>
+
+        <div class="payment-methods">
+          <div class="payment-method-card" data-method="wire">
+            <div class="payment-method-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto;">
+                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 22V12H15V22" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="payment-method-title">Havale / EFT</div>
+            <div class="payment-method-description">Açıklama ile gönder</div>
+          </div>
+
+          <div class="payment-method-card" data-method="card">
+            <div class="payment-method-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto;">
+                <rect x="2" y="5" width="20" height="14" rx="2" stroke="#e4e4e7" stroke-width="1.5"/>
+                <path d="M2 10H22" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M6 15H10" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="payment-method-title">Kredi Kartı</div>
+            <div class="payment-method-description">Link ile ödeme</div>
+          </div>
+
+          <div class="payment-method-card" data-method="online">
+            <div class="payment-method-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto;">
+                <circle cx="12" cy="12" r="9" stroke="#e4e4e7" stroke-width="1.5"/>
+                <path d="M12 16V12L15 9" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="payment-method-title">Online Ödeme</div>
+            <div class="payment-method-description">Hızlı yönlendirme</div>
+          </div>
         </div>
-        <div class="payment-method-title">
-         Havale / EFT
+      </div>
+
+      <!-- Details: Wire -->
+      <div class="payment-details" id="details-wire">
+        <div class="detail-group">
+          <div class="detail-label">Banka Adı</div>
+          <div class="detail-value" id="wire_bank_name">—</div>
         </div>
-        <div class="payment-method-description">
-         Anında işlenir
+
+        <div class="detail-group">
+          <div class="detail-label">IBAN</div>
+          <div class="detail-value" id="wire_iban">—</div>
+          <button class="copy-button" id="btnCopyIban" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            Kopyala
+          </button>
         </div>
-       </div>
-       <div class="payment-method-card" data-method="card">
-        <div class="payment-method-icon">
-         <svg width="32" height="32" viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#e4e4e7" stroke-width="1.5" /> <path d="M2 10H22" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" /> <path d="M6 15H10" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" />
-         </svg>
+
+        <div class="detail-group">
+          <div class="detail-label">Alıcı Ünvan</div>
+          <div class="detail-value" id="wire_receiver">—</div>
         </div>
-        <div class="payment-method-title">
-         Kredi Kartı
+
+        <div class="detail-group">
+          <div class="detail-label">Açıklama (Zorunlu)</div>
+          <div class="detail-value" id="wire_desc">—</div>
+          <button class="copy-button" id="btnCopyDesc" type="button">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            Kopyala
+          </button>
         </div>
-        <div class="payment-method-description">
-         Güvenli ödeme
+      </div>
+
+      <!-- Details: Card -->
+      <div class="payment-details" id="details-card">
+        <div class="detail-group">
+          <div class="detail-label">Bilgi</div>
+          <div style="padding:16px;background:rgba(234,179,8,.1);border-radius:4px;border-left:3px solid #fde047;">
+            <p style="font-size:11px;color:#fde047;line-height:1.5;margin:0;">
+              Güvenli ödeme bağlantısı size özel olarak hazırlanır. Eğer sistemde bir ödeme linki varsa aşağıdaki buton ile açılır.
+            </p>
+          </div>
+          <div class="mt-3">
+            <button class="btn-secondary" id="btnOpenPaymentLink" type="button" disabled>ÖDEME LİNKİNİ AÇ</button>
+          </div>
         </div>
-       </div>
-       <div class="payment-method-card" data-method="online">
-        <div class="payment-method-icon">
-         <svg width="32" height="32" viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;"><circle cx="12" cy="12" r="9" stroke="#e4e4e7" stroke-width="1.5" /> <path d="M12 16V12L15 9" stroke="#e4e4e7" stroke-width="1.5" stroke-linecap="round" />
-         </svg>
+      </div>
+
+      <!-- Details: Online -->
+      <div class="payment-details" id="details-online">
+        <div class="detail-group">
+          <div class="detail-label">Online Ödeme</div>
+          <div style="padding:16px;background:rgba(134,239,172,.1);border-radius:4px;border-left:3px solid #86efac;text-align:center;">
+            <p style="font-size:11px;color:#86efac;margin:0 0 12px 0;line-height:1.5;">
+              Güvenli ödeme sayfasına yönlendirileceksiniz.
+            </p>
+            <button class="btn-secondary" id="btnGoOnline" type="button" disabled>ÖDEME SAYFASINA GİT →</button>
+          </div>
         </div>
-        <div class="payment-method-title">
-         Online Ödeme
-        </div>
-        <div class="payment-method-description">
-         Hızlı ve kolay
-        </div>
-       </div>
       </div>
-     </div><!-- Payment Details (Dynamic) -->
-     <div class="payment-details" id="details-wire">
-      <div class="detail-group">
-       <div class="detail-label">
-        Banka Adı
-       </div>
-       <div class="detail-value">
-        Türkiye İş Bankası A.Ş.
-       </div>
+
+      <button class="btn-complete" id="btn-complete" disabled type="button">ÖDEMEYİ TAMAMLA</button>
+
+      <div class="btn-subtitle">
+        Ödeme alındığında dosya otomatik güncellenir.<br/>
+        Dekont göndermenize gerek yoktur.
       </div>
-      <div class="detail-group">
-       <div class="detail-label">
-        IBAN
-       </div>
-       <div class="detail-value">
-        TR33 0006 4000 0011 2345 6789 01
-       </div><button class="copy-button" onclick="copyToClipboard('TR33 0006 4000 0011 2345 6789 01')">
-        <svg width="12" height="12" viewbox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" /> <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2" />
-        </svg> Kopyala </button>
-      </div>
-      <div class="detail-group">
-       <div class="detail-label">
-        Alıcı Ünvan
-       </div>
-       <div class="detail-value">
-        ABC Tahsilat Hizmetleri A.Ş.
-       </div>
-      </div>
-      <div class="detail-group">
-       <div class="detail-label">
-        Açıklama (Zorunlu)
-       </div>
-       <div class="detail-value">
-        120.01.001 – DYM-2026-0142
-       </div><button class="copy-button" onclick="copyToClipboard('120.01.001 – DYM-2026-0142')">
-        <svg width="12" height="12" viewbox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" /> <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2" />
-        </svg> Kopyala </button>
-      </div>
-     </div>
-     <div class="payment-details" id="details-card">
-      <div class="detail-group">
-       <div class="detail-label">
-        Bilgi
-       </div>
-       <div style="padding: 16px; background: rgba(234, 179, 8, 0.1); border-radius: 4px; border-left: 3px solid #fde047;">
-        <p style="font-size: 11px; color: #fde047; line-height: 1.5;">Güvenli ödeme bağlantısı size özel olarak gönderilmiştir. Ödeme sonrası tutar, otomatik olarak borç bakiyesinden düşülecektir.</p>
-       </div>
-      </div>
-     </div>
-     <div class="payment-details" id="details-online">
-      <div class="detail-group">
-       <div class="detail-label">
-        Online Ödeme Sayfası
-       </div>
-       <div style="padding: 16px; background: rgba(134, 239, 172, 0.1); border-radius: 4px; border-left: 3px solid #86efac; text-align: center;">
-        <p style="font-size: 11px; color: #86efac; margin-bottom: 12px; line-height: 1.5;">Güvenli ödeme sayfasına yönlendirileceksiniz.</p><button style="background: #52525b; border: 1px solid #71717a; color: #e4e4e7; padding: 10px 20px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#71717a'" onmouseout="this.style.background='#52525b'" onclick="handleOnlinePayment()"> Ödemeye Git → </button>
-       </div>
-      </div>
-     </div><!-- Complete Button --> <button class="btn-complete" id="btn-complete" disabled onclick="completePayment()"> ÖDEMEYİ TAMAMLA </button>
-     <div class="btn-subtitle">
-      Ödeme alındığında dosya otomatik güncellenir.<br>
-       Dekont göndermenize gerek yoktur.
-     </div>
-    </div><!-- Info Panel -->
-    <div class="info-panel">
-     <div class="info-title">
-      Bilgilendirme
-     </div>
-     <ul class="info-list">
-      <li>Bu ödeme CoRM sistemi üzerinden kayıt altına alınır.</li>
-      <li>Ödeme sonrası sorumlu ekip bilgilendirilir.</li>
-      <li>Ödeme alınmadan dosya kapanmaz.</li>
-      <li>Soruların  z için sorumlu kişiyle iletişime geçebilirsiniz.</li>
-     </ul>
-    </div><!-- Postpone Section -->
-    <div class="postpone-section">
-     <div class="postpone-header">
-      <div class="postpone-title">
-       Erteleme Talebi (Sınırlı)
-      </div>
-      <div class="postpone-subtitle">
-       Erteleme yalnızca sistemin izin verdiği sayıda ve sürede mümkündür.
-      </div>
-     </div><!-- Remaining Rights -->
-     <div class="rights-box" id="rights-box">
-      <div class="rights-label">
-       Kalan Erteleme Hakkı
-      </div>
-      <div class="rights-display" id="rights-display">
-       1 / 3
-      </div>
-      <div class="rights-description">
-       Bu dosyada toplam 3 kez erteleme yapılabilir.
-      </div>
-     </div><!-- Date Selection -->
-     <div class="form-group"><label class="form-label" for="postpone-date">Yeni Ödeme Tarihi</label> <input type="date" id="postpone-date" class="form-input">
-      <div class="form-hint">
-       Seçilebilecek tarih: Bugünden itibaren en fazla 7 gün
-      </div>
-     </div><!-- Reason Selection -->
-     <div class="form-group"><label class="form-label" for="postpone-reason">Erteleme Nedeni</label> <select id="postpone-reason" class="form-select"> <option value="">Neden seçin</option> <option value="cashflow">Nakit akışı gecikmesi</option> <option value="bank">Banka işlemi bekleniyor</option> <option value="accounting">Muhasebe onayı bekleniyor</option> <option value="technical">Teknik / operasyonel neden</option> <option value="other">Diğer</option> </select>
-     </div><!-- Optional Description -->
-     <div class="form-group"><label class="form-label" for="postpone-description">Açıklama (Opsiyonel)</label> <textarea id="postpone-description" class="form-textarea" placeholder="Örn: Banka transferi yarın gerçekleşecek"></textarea>
-     </div><!-- Dynamic Warnings -->
-     <div id="postpone-warnings"></div><!-- Submit Button --> <button class="btn-secondary" id="btn-postpone" disabled onclick="submitPostponeRequest()"> ERTELEME TALEBİ GÖNDER </button>
-     <div class="btn-subtitle">
-      Bu talep sisteme kaydedilir ve sorumlu ekip bilgilendirilir.
-     </div>
-    </div><!-- Rules Panel -->
-    <div class="rules-panel">
-     <div class="rules-title">
-      Erteleme Kuralları
-     </div>
-     <ul class="rules-list">
-      <li>Her dosya için erteleme sayısı sınırlıdır.</li>
-      <li>Her erteleme en fazla 7 gün olabilir.</li>
-      <li>Erteleme hakkı dolduğunda ödeme zorunludur.</li>
-      <li>Kurallara uyulmaması dosyanın X sürecine alınmasına neden olur.</li>
-     </ul>
-     <div class="rules-footer">
-      Bu kurallar herkes için aynıdır.
-     </div>
     </div>
-   </main>
-  </div>
+
+    <div class="info-panel">
+      <div class="info-title">Bilgilendirme</div>
+      <ul class="info-list">
+        <li>Bu ödeme CoRM sistemi üzerinden kayıt altına alınır.</li>
+        <li>Ödeme sonrası sorumlu ekip bilgilendirilir.</li>
+        <li>Ödeme alınmadan dosya kapanmaz.</li>
+        <li>Sorularınız için sorumlu kişiyle iletişime geçebilirsiniz.</li>
+      </ul>
+    </div>
+
+    <div class="postpone-section">
+      <div class="postpone-header">
+        <div class="postpone-title">Erteleme Talebi (Sınırlı)</div>
+        <div class="postpone-subtitle">Erteleme yalnızca sistemin izin verdiği sayıda ve sürede mümkündür.</div>
+      </div>
+
+      <div class="rights-box" id="rights-box">
+        <div class="rights-label">Kalan Erteleme Hakkı</div>
+        <div class="rights-display" id="rights-display">—</div>
+        <div class="rights-description" id="rights-desc">—</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="postpone-date">Yeni Ödeme Tarihi</label>
+        <input type="date" id="postpone-date" class="form-input">
+        <div class="form-hint" id="postpone-hint">Seçilebilecek tarih: Bugünden itibaren en fazla — gün</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="postpone-reason">Erteleme Nedeni</label>
+        <select id="postpone-reason" class="form-select">
+          <option value="">Neden seçin</option>
+          <option value="cashflow">Nakit akışı gecikmesi</option>
+          <option value="bank">Banka işlemi bekleniyor</option>
+          <option value="accounting">Muhasebe onayı bekleniyor</option>
+          <option value="technical">Teknik / operasyonel neden</option>
+          <option value="other">Diğer</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="postpone-description">Açıklama (Opsiyonel)</label>
+        <textarea id="postpone-description" class="form-textarea" placeholder="Örn: Banka transferi yarın gerçekleşecek"></textarea>
+      </div>
+
+      <div id="postpone-warnings"></div>
+
+      <button class="btn-secondary" id="btn-postpone" disabled type="button">ERTELEME TALEBİ GÖNDER</button>
+
+      <div class="btn-subtitle">
+        Bu talep sisteme kaydedilir ve sorumlu ekip bilgilendirilir.
+      </div>
+    </div>
+
+    <div class="rules-panel">
+      <div class="rules-title">Erteleme Kuralları</div>
+      <ul class="rules-list">
+        <li>Her dosya için erteleme sayısı sınırlıdır.</li>
+        <li>Her erteleme en fazla belirlenen gün kadar olabilir.</li>
+        <li>Erteleme hakkı dolduğunda ödeme zorunludur.</li>
+        <li>Kurallara uyulmaması dosyanın X sürecine alınmasına neden olur.</li>
+      </ul>
+      <div class="rules-footer">Bu kurallar herkes için aynıdır.</div>
+    </div>
+
+  </main>
+</div>
+
 <script>
 /** =========================
- *  REAL CONFIG
+ *  CONFIG (from GitHub)
  *  ========================= */
-const WEBAPP_URL = "/api/corm";
+const WEBAPP_URL = (window.CORM_WEBAPP_URL || "/api/corm");
 
 /** =========================
  *  Helpers
@@ -868,32 +427,47 @@ function qs(name){
   const url = new URL(window.location.href);
   return url.searchParams.get(name) || "";
 }
-
-function moneyTRY(n){
-  const x = Number(n);
-  const v = Number.isFinite(x) ? x : 0;
-  return v.toLocaleString("tr-TR", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ₺";
+function pad2(n){ return String(n).padStart(2,"0"); }
+function fmtDateTR(iso){
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) {
+    // maybe already yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
+      const p = String(iso).split("-");
+      return `${p[2]}.${p[1]}.${p[0]}`;
+    }
+    return "—";
+  }
+  return `${pad2(d.getDate())}.${pad2(d.getMonth()+1)}.${d.getFullYear()}`;
+}
+function num(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function moneyTRY(v){
+  const n = num(v);
+  return n.toLocaleString("tr-TR", {minimumFractionDigits:2, maximumFractionDigits:2}) + " ₺";
 }
 
-function setText(id, txt){
-  const el = $(id);
-  if (el) el.textContent = txt ?? "";
-}
-
-function toastGreen(msg){
+function toast(type, msg){
   const div = document.createElement("div");
-  div.style.cssText = "position:fixed;top:20px;right:20px;background:rgba(134,239,172,.18);border:1px solid rgba(134,239,172,.5);color:#86efac;padding:12px 16px;border-radius:8px;font-size:11px;font-weight:700;z-index:9999;";
+  div.style.cssText =
+    "position:fixed;top:20px;right:20px;z-index:9999;" +
+    "padding:12px 16px;border-radius:8px;font-size:11px;font-weight:800;" +
+    "letter-spacing:.6px;text-transform:uppercase;";
+  if (type === "ok"){
+    div.style.background = "rgba(34,197,94,.14)";
+    div.style.border = "1px solid rgba(34,197,94,.45)";
+    div.style.color = "#86efac";
+  } else {
+    div.style.background = "rgba(220,38,38,.14)";
+    div.style.border = "1px solid rgba(220,38,38,.45)";
+    div.style.color = "#fca5a5";
+  }
   div.textContent = msg;
   document.body.appendChild(div);
-  setTimeout(()=>div.remove(), 2200);
-}
-
-function toastRed(msg){
-  const div = document.createElement("div");
-  div.style.cssText = "position:fixed;top:20px;right:20px;background:rgba(220,38,38,.18);border:1px solid rgba(220,38,38,.55);color:#fca5a5;padding:12px 16px;border-radius:8px;font-size:11px;font-weight:700;z-index:9999;";
-  div.textContent = msg;
-  document.body.appendChild(div);
-  setTimeout(()=>div.remove(), 2600);
+  setTimeout(()=>div.remove(), 2500);
 }
 
 async function apiPost(payload){
@@ -902,8 +476,24 @@ async function apiPost(payload){
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  return await res.json();
+  const text = await res.text();
+  if (!res.ok) throw new Error("HTTP " + res.status + " | " + text.slice(0,180));
+  try { return JSON.parse(text); }
+  catch { throw new Error("Non-JSON response: " + text.slice(0,180)); }
+}
+
+function setTopAlert(html){
+  const box = $("topAlert");
+  box.innerHTML = html || "";
+}
+
+function escapeHtml(str){
+  return String(str ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 /** =========================
@@ -913,55 +503,96 @@ let portalData = null;
 let selectedMethod = null;
 
 /** =========================
- *  Render
+ *  UI: Payment method
  *  ========================= */
 function applyPaymentMethodUI(){
-  document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
-  document.querySelectorAll('.payment-details').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll(".payment-method-card").forEach(c => c.classList.remove("selected"));
+  document.querySelectorAll(".payment-details").forEach(p => p.classList.remove("show"));
 
   if (selectedMethod){
     const card = document.querySelector(`.payment-method-card[data-method="${selectedMethod}"]`);
-    if (card) card.classList.add('selected');
-    const panel = document.getElementById("details-" + selectedMethod);
-    if (panel) panel.classList.add('show');
+    if (card) card.classList.add("selected");
+    const panel = $("details-" + selectedMethod);
+    if (panel) panel.classList.add("show");
 
-    const btn = document.getElementById("btn-complete");
+    const btn = $("btn-complete");
     if (btn) btn.disabled = false;
   }
 }
 
-function setRightsUI(remaining, limit, maxDays){
-  const rightsBox = document.getElementById('rights-box');
-  const rightsDisplay = document.getElementById('rights-display');
-  const btnPostpone = document.getElementById('btn-postpone');
-  const dateInput = document.getElementById('postpone-date');
-  const reasonSel = document.getElementById('postpone-reason');
-  const desc = document.getElementById('postpone-description');
-  const warningsDiv = document.getElementById('postpone-warnings');
+function setStatusBadge({isPaid, dueDate}){
+  const badge = $("statusBadge");
+  if (!badge) return;
 
-  // hint text
-  const hint = document.querySelector(".form-hint");
-  if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${maxDays} gün`;
+  badge.classList.remove("due-today","overdue","wait","paid");
+
+  if (isPaid){
+    badge.classList.add("paid");
+    badge.textContent = "ÖDENDİ";
+    return;
+  }
+
+  const today = new Date();
+  const todayIso = today.toISOString().slice(0,10);
+  const due = String(dueDate || "").slice(0,10);
+
+  if (!due){
+    badge.classList.add("wait");
+    badge.textContent = "Vade bilgisi yok";
+    return;
+  }
+
+  if (todayIso === due){
+    badge.classList.add("due-today");
+    badge.textContent = "Bugün ödenmesi bekleniyor";
+  } else if (todayIso > due){
+    badge.classList.add("overdue");
+    badge.textContent = "Vade geçti";
+  } else {
+    badge.classList.add("wait");
+    badge.textContent = "Vade bekleniyor";
+  }
+}
+
+function setRightsUI({remaining, limit, maxDays}){
+  const rightsBox = $("rights-box");
+  const rightsDisplay = $("rights-display");
+  const rightsDesc = $("rights-desc");
+  const btnPostpone = $("btn-postpone");
+  const dateInput = $("postpone-date");
+  const reasonSel = $("postpone-reason");
+  const desc = $("postpone-description");
+  const warningsDiv = $("postpone-warnings");
+  const hint = $("postpone-hint");
+
+  const lim = num(limit);
+  const rem = num(remaining);
+  const md = Math.max(0, parseInt(maxDays || 0, 10) || 0);
+
+  if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${md} gün`;
 
   // date constraints
   const today = new Date();
   const maxDate = new Date();
-  maxDate.setDate(today.getDate() + maxDays);
-  dateInput.min = today.toISOString().split('T')[0];
-  dateInput.max = maxDate.toISOString().split('T')[0];
+  maxDate.setDate(today.getDate() + md);
 
-  rightsDisplay.textContent = `${remaining} / ${limit}`;
-  if (remaining <= 0){
-    rightsBox.classList.add('depleted');
-    rightsDisplay.classList.add('depleted');
+  dateInput.min = today.toISOString().slice(0,10);
+  dateInput.max = maxDate.toISOString().slice(0,10);
+
+  rightsDisplay.textContent = `${rem} / ${lim}`;
+  rightsDesc.textContent = `Bu dosyada toplam ${lim} kez erteleme yapılabilir.`;
+
+  if (rem <= 0){
+    rightsBox.classList.add("depleted");
+    rightsDisplay.classList.add("depleted");
     btnPostpone.disabled = true;
     dateInput.disabled = true;
     reasonSel.disabled = true;
     desc.disabled = true;
     warningsDiv.innerHTML = '<div class="alert-box danger">Erteleme hakkınız kalmamıştır. Ödeme yapmanız gerekmektedir.</div>';
   } else {
-    rightsBox.classList.remove('depleted');
-    rightsDisplay.classList.remove('depleted');
+    rightsBox.classList.remove("depleted");
+    rightsDisplay.classList.remove("depleted");
     dateInput.disabled = false;
     reasonSel.disabled = false;
     desc.disabled = false;
@@ -970,41 +601,17 @@ function setRightsUI(remaining, limit, maxDays){
   }
 }
 
-function setAmountUI(amountToPay, dueDateStr){
-  // amount value is inside .amount-value (no id). We'll locate it.
-  const amountEl = document.querySelector(".amount-value");
-  if (amountEl) amountEl.textContent = moneyTRY(amountToPay);
-
-  const badge = document.querySelector(".status-badge");
-  if (!badge) return;
-
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0,10);
-  if (dueDateStr && todayStr === dueDateStr){
-    badge.classList.remove("overdue");
-    badge.classList.add("due-today");
-    badge.textContent = "Bugün ödenmesi bekleniyor";
-  } else if (dueDateStr && todayStr > dueDateStr){
-    badge.classList.remove("due-today");
-    badge.classList.add("overdue");
-    badge.textContent = "Vade geçti";
-  } else {
-    badge.classList.remove("overdue");
-    badge.classList.add("due-today");
-    badge.textContent = "Vade bekleniyor";
-  }
-}
-
 /** =========================
- *  Load portal data
+ *  Load portal
  *  ========================= */
 async function loadPortal(){
-  const token = qs("token");
+  // allow token OR payment_token
+  const token = qs("token") || qs("payment_token");
   const caseId = qs("case_id");
 
   if (!token || !caseId){
-    toastRed("Eksik parametre: token / case_id");
-    return;
+    setTopAlert('<div class="alert-box danger">Eksik parametre: token/payment_token veya case_id</div>');
+    throw new Error("Missing token/case_id");
   }
 
   const data = await apiPost({ action:"getPayPortal", token, case_id: caseId });
@@ -1012,65 +619,128 @@ async function loadPortal(){
 
   portalData = data;
 
-  // Header date
-  const todayTop = document.querySelector("header .text-xs.text-zinc-500.font-heading");
-  if (todayTop && data.portal && data.portal.today) todayTop.textContent = data.portal.today.split("-").reverse().join(".");
+  // Top date
+  $("todayTop").textContent = data?.portal?.today ? fmtDateTR(data.portal.today) : fmtDateTR(new Date().toISOString());
 
-  // Main texts
-  setText("company-name", data.case.account_name || "-");
-  setText("account-code", data.case.account_code || "-");
-  setText("file-number", data.case.case_id || "-");
-  setText("responsible", data.case.owner_name || data.case.owner_user_id || "-");
+  // Case mapping (backend should already normalize; fallback to Turkish keys if backend returns raw)
+  const c = data.case || {};
 
-  setAmountUI(data.case.amount_to_pay, data.case.due_date);
+  // These may come normalized:
+  const accountName = c.account_name || c["Hesap Adı"] || "—";
+  const accountCode = c.account_code || c["Hesap Kodu"] || "—";
+  const caseNo      = c.case_id || c["Dosya Numarası"] || qs("case_id") || "—";
+  const ownerName   = c.owner_name || c.owner_user_id || c["Sorumlu"] || "—";
 
-  // Rules + rights
-  setRightsUI(
-    data.portal.remaining_rights,
-    data.portal.postpone_limit,
-    data.portal.max_postpone_days
-  );
+  $("company-name").textContent = accountName;
+  $("account-code").textContent = accountCode;
+  $("file-number").textContent  = caseNo;
+  $("responsible").textContent  = ownerName;
 
-  // If expired, show info and disable actions
-  if (data.portal.expired){
-    const warningsDiv = document.getElementById('postpone-warnings');
-    warningsDiv.innerHTML = '<div class="alert-box info">Bilgi: Ödeme bağlantısının geçerlilik süresi dolmuş olabilir. Lütfen sorumlu kişiyle iletişime geçin.</div>';
-    document.getElementById("btn-complete").disabled = true;
-    document.getElementById("btn-postpone").disabled = true;
+  // Amount: prefer backend computed
+  // (If your backend uses promise_amount or overdue/balance, it should send amount_to_pay)
+  const amountToPay =
+    (c.amount_to_pay ?? c.promise_amount ?? c["Son Tahsilat Tutarı"] ?? c["Bakiye"] ?? 0);
+
+  $("amountValue").textContent = moneyTRY(amountToPay);
+
+  // Description text
+  const lastPromise = c.last_promise_date || c["Son Tahsilat Tarihi"];
+  $("amountDesc").textContent = lastPromise
+    ? `Bu tutar sistemde kayıtlı son tahsilat sözüne göre hesaplanır. (Son söz: ${escapeHtml(String(lastPromise))})`
+    : `Bu tutar sistemde kayıtlı son duruma göre hesaplanır.`;
+
+  // Status
+  const isPaid = (c.is_paid === true || String(c.is_paid||"").toUpperCase() === "TRUE");
+  const dueDate = c.due_date || null;
+  setStatusBadge({ isPaid, dueDate });
+
+  // Wire details: from backend portal or fallback to constants (if backend sends)
+  const p = data.portal || {};
+  const bankName = p.bank_name || "—";
+  const iban = p.company_iban || p.iban || "—";
+  const receiver = p.company_receiver || p.receiver || "—";
+
+  $("wire_bank_name").textContent = bankName;
+  $("wire_iban").textContent = iban;
+  $("wire_receiver").textContent = receiver;
+
+  const wireDesc = `${accountCode} – ${caseNo}`;
+  $("wire_desc").textContent = wireDesc;
+
+  $("btnCopyIban").onclick = ()=> copyToClipboard(iban);
+  $("btnCopyDesc").onclick = ()=> copyToClipboard(wireDesc);
+
+  // Payment link (for card/online)
+  const payLink = c.payment_link || p.payment_link || "";
+  const btnPayLink = $("btnOpenPaymentLink");
+  const btnGoOnline = $("btnGoOnline");
+
+  if (payLink){
+    btnPayLink.disabled = false;
+    btnGoOnline.disabled = false;
+
+    btnPayLink.onclick = ()=> window.location.href = payLink;
+    btnGoOnline.onclick = ()=> window.location.href = payLink;
+  } else {
+    btnPayLink.disabled = true;
+    btnGoOnline.disabled = true;
   }
 
-  // Paid => lock UI
-  if (data.case.is_paid){
-    toastGreen("Bu dosya ödenmiş görünüyor.");
-    document.getElementById("btn-complete").disabled = true;
-    document.getElementById("btn-postpone").disabled = true;
+  // Rights / postpone limits
+  // backend should return remaining_rights, postpone_limit, max_postpone_days
+  const postponeLimit = (p.postpone_limit ?? c.postpone_limit ?? 0);
+  const postponeUsed  = (p.postpone_used ?? c.postpone_used ?? 0);
+  const remaining = Math.max(0, num(postponeLimit) - num(postponeUsed));
+  const maxDays = (p.max_postpone_days ?? p.postpone_max_days ?? 7);
+
+  setRightsUI({ remaining, limit: postponeLimit, maxDays });
+
+  // Expired / paid locks
+  const expired = !!p.expired;
+  if (expired){
+    setTopAlert('<div class="alert-box info">Bilgi: Bu ödeme linkinin geçerlilik süresi dolmuş olabilir. Lütfen sorumlu kişiyle iletişime geçin.</div>');
+  } else {
+    setTopAlert("");
   }
+
+  // Lock buttons
+  if (expired || isPaid){
+    $("btn-complete").disabled = true;
+    $("btn-postpone").disabled = true;
+
+    if (isPaid){
+      setTopAlert('<div class="alert-box ok">Bu dosya ödenmiş görünüyor. Teşekkürler.</div>');
+    }
+  }
+
+  // Re-validate postpone form
+  validatePostponeForm();
 }
 
 /** =========================
- *  Payment selection
+ *  Clipboard
  *  ========================= */
-document.querySelectorAll('.payment-method-card').forEach(card => {
-  card.addEventListener('click', function() {
-    selectedMethod = this.getAttribute('data-method');
-    applyPaymentMethodUI();
-  });
-});
-
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => toastGreen("✓ Kopyalandı")).catch(() => toastRed("Kopyalama başarısız"));
+function copyToClipboard(text){
+  navigator.clipboard.writeText(String(text||""))
+    .then(()=>toast("ok","KOPYALANDI"))
+    .catch(()=>toast("err","KOPYALAMA BAŞARISIZ"));
 }
 
+/** =========================
+ *  Payment confirm
+ *  ========================= */
 async function completePayment(){
   try{
-    if (!portalData) return;
-    if (!selectedMethod) return;
+    if (!portalData) throw new Error("Portal data not loaded");
+    if (!selectedMethod) throw new Error("Ödeme yöntemi seçiniz");
 
-    const token = qs("token");
+    const token = qs("token") || qs("payment_token");
     const caseId = qs("case_id");
-    const amount = portalData.case.amount_to_pay;
 
-    const btn = document.getElementById("btn-complete");
+    const amount =
+      (portalData.case?.amount_to_pay ?? portalData.case?.promise_amount ?? portalData.case?.["Bakiye"] ?? 0);
+
+    const btn = $("btn-complete");
     btn.disabled = true;
     const old = btn.textContent;
     btn.textContent = "İŞLENİYOR...";
@@ -1085,53 +755,60 @@ async function completePayment(){
 
     if (!resp.ok) throw new Error(resp.error || "portalConfirmPayment failed");
 
-    toastGreen("✓ Ödeme kaydı alındı");
+    toast("ok","ÖDEME KAYDI ALINDI");
     btn.textContent = "ÖDENDİ";
-    // lock other actions
-    document.getElementById("btn-postpone").disabled = true;
+    $("btn-postpone").disabled = true;
+    $("statusBadge").classList.remove("due-today","overdue","wait");
+    $("statusBadge").classList.add("paid");
+    $("statusBadge").textContent = "ÖDENDİ";
 
   } catch(e){
-    toastRed("Hata: " + (e.message || e));
-    const btn = document.getElementById("btn-complete");
+    toast("err", "HATA: " + (e.message || e));
+    const btn = $("btn-complete");
     btn.disabled = false;
     btn.textContent = "ÖDEMEYİ TAMAMLA";
   }
 }
 
-window.completePayment = completePayment;
-window.copyToClipboard = copyToClipboard;
-
 /** =========================
- *  Postpone (Debtor selected date)
+ *  Postpone
  *  ========================= */
 function validatePostponeForm(){
-  const remaining = portalData?.portal?.remaining_rights ?? 0;
-  const date = document.getElementById('postpone-date').value;
-  const reason = document.getElementById('postpone-reason').value;
-  const btn = document.getElementById('btn-postpone');
-  btn.disabled = !(remaining > 0 && date && reason && !(portalData?.portal?.expired) && !(portalData?.case?.is_paid));
-}
+  const token = qs("token") || qs("payment_token");
+  const caseId = qs("case_id");
+  if (!token || !caseId) return;
 
-document.getElementById('postpone-date').addEventListener('change', validatePostponeForm);
-document.getElementById('postpone-reason').addEventListener('change', validatePostponeForm);
+  const remaining =
+    portalData?.portal?.remaining_rights ??
+    Math.max(0, num(portalData?.portal?.postpone_limit ?? portalData?.case?.postpone_limit ?? 0) - num(portalData?.portal?.postpone_used ?? portalData?.case?.postpone_used ?? 0));
+
+  const date = $("postpone-date").value;
+  const reason = $("postpone-reason").value;
+
+  const expired = !!portalData?.portal?.expired;
+  const isPaid = (portalData?.case?.is_paid === true || String(portalData?.case?.is_paid||"").toUpperCase() === "TRUE");
+
+  $("btn-postpone").disabled = !(remaining > 0 && date && reason && !expired && !isPaid);
+}
 
 async function submitPostponeRequest(){
   try{
-    if (!portalData) return;
+    if (!portalData) throw new Error("Portal data not loaded");
 
-    const token = qs("token");
+    const token = qs("token") || qs("payment_token");
     const caseId = qs("case_id");
-    const date = document.getElementById('postpone-date').value;
-    const reason = document.getElementById('postpone-reason').value;
-    const note = document.getElementById('postpone-description').value;
+    const date = $("postpone-date").value;
+    const reason = $("postpone-reason").value;
+    const note = $("postpone-description").value;
 
-    if (!date || !reason) return;
+    if (!date || !reason) throw new Error("Tarih ve neden zorunlu");
 
-    const btn = document.getElementById('btn-postpone');
+    const btn = $("btn-postpone");
     btn.disabled = true;
     const old = btn.textContent;
-    btn.textContent = "GÖNDERILIYOR...";
+    btn.textContent = "GÖNDERİLİYOR...";
 
+    // Backend applies real rules: postpone_limit + max_postpone_days etc.
     const resp = await apiPost({
       action: "portalPostpone",
       token,
@@ -1143,38 +820,61 @@ async function submitPostponeRequest(){
 
     if (!resp.ok) throw new Error(resp.error || "portalPostpone failed");
 
-    toastGreen("✓ Erteleme kaydedildi");
+    toast("ok","ERTELEME KAYDEDİLDİ");
 
-    // update local rights
-    portalData.portal.postpone_used = resp.postpone_used;
-    portalData.portal.remaining_rights = resp.remaining_rights;
+    // Update rights from response if present
+    // Expected: remaining_rights, postpone_limit, postpone_used, max_postpone_days
+    if (!portalData.portal) portalData.portal = {};
+    portalData.portal.postpone_used = resp.postpone_used ?? portalData.portal.postpone_used;
+    portalData.portal.postpone_limit = resp.postpone_limit ?? portalData.portal.postpone_limit;
+    portalData.portal.remaining_rights = resp.remaining_rights ?? portalData.portal.remaining_rights;
+    portalData.portal.max_postpone_days = portalData.portal.max_postpone_days ?? resp.max_postpone_days;
 
-    setRightsUI(resp.remaining_rights, resp.postpone_limit, portalData.portal.max_postpone_days);
+    const limit = resp.postpone_limit ?? portalData.portal.postpone_limit ?? portalData.case?.postpone_limit ?? 0;
+    const remaining = resp.remaining_rights ?? portalData.portal.remaining_rights ?? 0;
+    const maxDays = resp.max_postpone_days ?? portalData.portal.max_postpone_days ?? 7;
+
+    setRightsUI({ remaining, limit, maxDays });
 
     // clear form
-    document.getElementById('postpone-date').value = '';
-    document.getElementById('postpone-reason').value = '';
-    document.getElementById('postpone-description').value = '';
+    $("postpone-date").value = "";
+    $("postpone-reason").value = "";
+    $("postpone-description").value = "";
 
     btn.textContent = "ERTELEME TALEBİ GÖNDER";
     btn.disabled = true;
 
   } catch(e){
-    toastRed("Hata: " + (e.message || e));
-    const btn = document.getElementById('btn-postpone');
-    btn.textContent = "ERTELEME TALEBİ GÖNDER";
+    toast("err","HATA: " + (e.message || e));
+    $("btn-postpone").textContent = "ERTELEME TALEBİ GÖNDER";
     validatePostponeForm();
   }
 }
 
-window.submitPostponeRequest = submitPostponeRequest;
+/** =========================
+ *  Events
+ *  ========================= */
+document.querySelectorAll(".payment-method-card").forEach(card=>{
+  card.addEventListener("click", ()=>{
+    selectedMethod = card.getAttribute("data-method");
+    applyPaymentMethodUI();
+  });
+});
+
+$("btn-complete").addEventListener("click", completePayment);
+$("btn-postpone").addEventListener("click", submitPostponeRequest);
+
+$("postpone-date").addEventListener("change", validatePostponeForm);
+$("postpone-reason").addEventListener("change", validatePostponeForm);
+$("postpone-description").addEventListener("input", validatePostponeForm);
 
 /** =========================
  *  Init
  *  ========================= */
-loadPortal().catch(e => toastRed("Hata: " + (e.message || e)));
+loadPortal().catch(e=>{
+  setTopAlert('<div class="alert-box danger">Hata: ' + escapeHtml(e.message || String(e)) + '</div>');
+});
 </script>
 
-
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c830edcb6762459',t:'MTc3MDEzMzU1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
