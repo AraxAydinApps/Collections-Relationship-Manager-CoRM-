@@ -393,12 +393,11 @@
               <label class="form-label">Aksiyon Tipi</label>
               <select id="f_actionType" class="form-select">
                 <option value="">Seçiniz</option>
-<option value="promise">Tahsilat Sözü (Promise)</option>
-<option value="postpone">Erteleme (Postpone)</option>
-<option value="payment">Ödeme Alındı (Payment)</option>
-<option value="note">Not / Hatırlatma</option>
-<option value="moveToX">X Sürecine Al</option>
-
+                <option value="promise">Tahsilat Sözü (Promise)</option>
+                <option value="postpone">Erteleme (Postpone)</option>
+                <option value="payment">Ödeme Alındı (Payment)</option>
+                <option value="note">Not / Hatırlatma</option>
+                <option value="moveToX">X Sürecine Al</option>
               </select>
             </div>
 
@@ -467,33 +466,21 @@
   </div>
 
 <script>
-/** =========================
- *  A) WWW Fix (session/localStorage)
- *  ========================= */
 (function forceWww(){
   if (location.hostname === "arazad.xyz") {
     location.replace("https://www.arazad.xyz" + location.pathname + location.search + location.hash);
   }
 })();
 
-/** =========================
- *  B) CONFIG
- *  ========================= */
 const WEBAPP_URL = "/api/corm";
 const LOGIN_PAGE = "/index.html";
 const LIST_PAGE  = "/dosyalar.html";
 
-/** =========================
- *  C) STATE
- *  ========================= */
 let session = null;
 let caseId = null;
 let currentCase = null;
 let currentTimeline = [];
 
-/** =========================
- *  D) Helpers
- *  ========================= */
 const $ = (id) => document.getElementById(id);
 
 function loadSession(){
@@ -530,7 +517,6 @@ function num(v){
 }
 function fmtTRY(v){
   const n = num(v);
-  // نمایش با علامت منفی طبیعی
   return "₺" + n.toLocaleString("tr-TR");
 }
 function setFin(elId, v){
@@ -547,7 +533,6 @@ function safe(v){ return (v===null || v===undefined || v==="") ? "—" : String(
 function splitTags(tagStr){
   const s = String(tagStr || "").trim();
   if (!s) return [];
-  // پشتیبانی از جداکننده های رایج
   return s.split(/[,|;]/).map(x=>x.trim()).filter(Boolean);
 }
 
@@ -591,15 +576,11 @@ function setToday(){
 
 function setUserHeader(){
   $("user-name").textContent = safe(session?.user?.full_name);
-  // نقش را ساده و قابل نمایش کن
   const role = String(session?.user?.role || "");
   const roleMap = { admin:"Admin", collector:"Tahsilat Uzmanı", manager:"Yönetici" };
   $("user-role").textContent = roleMap[role] || safe(role);
 }
 
-/** =========================
- *  E) API
- *  ========================= */
 async function apiPost(payload){
   const res = await fetch(WEBAPP_URL, {
     method: "POST",
@@ -612,9 +593,6 @@ async function apiPost(payload){
   catch { throw new Error("Non-JSON response: " + text.slice(0,180)); }
 }
 
-/** =========================
- *  F) Load & Render
- *  ========================= */
 async function loadDetail(){
   const u = session.user;
   const data = await apiPost({
@@ -637,16 +615,13 @@ async function loadDetail(){
 function renderAll(){
   const c = currentCase;
 
-  // Header breadcrumb
   $("breadcrumb").textContent = `Dosyalar / ${safe(c.account_name)}`;
 
-  // Customer
   $("company-name").textContent = safe(c.account_name);
   $("company-code").textContent = safe(c.account_code);
   $("company-email").textContent = safe(c.email);
   $("company-phone").textContent = safe(c.phone);
 
-  // Tags
   const tags = splitTags(c.customer_tags);
   const tagBox = $("company-tags");
   tagBox.innerHTML = "";
@@ -664,16 +639,14 @@ function renderAll(){
     });
   }
 
-  // Owner
-  $("owner-name").textContent = safe(c.owner_user_id);
+  // ✅ Owner name (show full name, fallback to id)
+  $("owner-name").textContent = safe(c.owner_name || c.owner_user_id);
 
-  // Lock
   const locked = !!c.lock_reason;
   $("lock-icon").classList.toggle("hidden", !locked);
   $("lock-reason").classList.toggle("hidden", !locked);
   $("lock-reason").textContent = locked ? ("Kilit: " + c.lock_reason) : "";
 
-  // Financial
   setFin("fin-balance", c.balance);
   setFin("fin-overdue", c.overdue_balance);
 
@@ -693,18 +666,14 @@ function renderAll(){
 
   $("last-payment-amount").textContent = (c.last_payment_amount === "" || c.last_payment_amount === null || c.last_payment_amount === undefined) ? "—" : fmtTRY(c.last_payment_amount);
 
-  // Risk & vade
   $("risk-customer").textContent = (c.customer_risk === "" || c.customer_risk === null || c.customer_risk === undefined) ? "—" : fmtTRY(c.customer_risk);
   $("risk-own").textContent = (c.own_risk === "" || c.own_risk === null || c.own_risk === undefined) ? "—" : fmtTRY(c.own_risk);
 
   $("maturity-debt").textContent = (c.avg_debt_maturity ? (safe(c.avg_debt_maturity) + " gün") : "—");
   $("maturity-credit").textContent = (c.avg_credit_maturity ? (safe(c.avg_credit_maturity) + " gün") : "—");
   $("maturity-balance").textContent = (c.avg_balance_maturity ? (safe(c.avg_balance_maturity) + " gün") : "—");
-
-  // avg_collection_time sometimes is numeric
   $("avg-collection-time").textContent = (c.avg_collection_time ? (safe(c.avg_collection_time) + " gün") : "—");
 
-  // Stage badge + stepper
   const stage = String(c.stage || "").toLowerCase();
   const badge = $("stage-badge");
   badge.className = "stage-badge " + stageBadgeClass(stage);
@@ -714,24 +683,14 @@ function renderAll(){
     el.classList.toggle("active", el.getAttribute("data-stage") === stage);
   });
 
-  // Disable quick actions based on rules
-  // Backend also enforces, but UI should guide.
   const hasPromise = !!c.last_promise_date;
   const cerceve = stage === "cerceve";
 
-  // Promise: if already has promise OR locked OR cerceve
   $("btnQuickPromise").disabled = locked || cerceve || hasPromise;
-
-  // Payment always allowed (unless you want to lock it too)
   $("btnQuickPayment").disabled = false;
-
-  // Reminder (note) always allowed
   $("btnQuickReminder").disabled = false;
-
-  // X note allowed always
   $("btnQuickX").disabled = false;
 
-  // Warning banner logic
   const wb = $("warningBanner");
   wb.classList.add("hidden");
   wb.textContent = "";
@@ -743,7 +702,6 @@ function renderAll(){
     wb.classList.remove("hidden");
     wb.textContent = `⚠️ Dikkat: Aşama ÇERÇEVE. Promise / Postpone kısıtlanabilir.`;
   } else if (hasPromise){
-    // Söz girilmişse postpone limiti göstermek faydalı
     const used = num(c.postpone_used);
     const limit = num(c.postpone_limit);
     if (used >= limit){
@@ -752,10 +710,7 @@ function renderAll(){
     }
   }
 
-  // Timeline stats + list
   renderTimeline(currentTimeline);
-
-  // System alerts
   renderAlerts();
 }
 
@@ -766,7 +721,6 @@ function renderTimeline(items){
   let promiseCount = 0;
   let postponeCount = 0;
 
-  // Find last promise date-time
   let lastPromiseDate = null;
 
   items.forEach(a=>{
@@ -792,7 +746,6 @@ function renderTimeline(items){
     $("statSincePromise").textContent = "—";
   }
 
-  // newest first (UI nicer)
   const sorted = [...items].sort((a,b)=>{
     const da = new Date(a.action_date_time || 0).getTime();
     const db = new Date(b.action_date_time || 0).getTime();
@@ -823,7 +776,6 @@ function renderTimeline(items){
       badgeText = (t || "NOT").toUpperCase();
     }
 
-    // Content text
     const parts = [];
     if (a.note) parts.push(String(a.note));
     if (a.amount !== "" && a.amount !== null && a.amount !== undefined){
@@ -870,24 +822,20 @@ function renderAlerts(){
   const stage = String(c.stage || "").toLowerCase();
   const locked = !!c.lock_reason;
 
-  // Alert 1: Locked
   if (locked){
     addAlert("critical", `Kritik: Dosya kilitli (${c.lock_reason}). Bazı işlemler engellenebilir.`);
   }
 
-  // Alert 2: cerceve
   if (stage === "cerceve"){
     addAlert("warning", `Uyarı: Dosya ÇERÇEVE aşamasında. Promise/Postpone kısıtlanabilir.`);
   }
 
-  // Alert 3: postpone limit
   const used = num(c.postpone_used);
   const limit = num(c.postpone_limit);
   if (limit > 0 && used >= limit){
     addAlert("critical", `Kritik: Erteleme limiti dolu (${used}/${limit}).`);
   }
 
-  // Alert 4: broken promises count
   const broken = num(c.broken_promise_count);
   if (broken > 0){
     addAlert("warning", `Uyarı: Bozulan söz sayısı: ${broken}.`);
@@ -917,24 +865,17 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-/** =========================
- *  G) Actions (connected to backend)
- *  ========================= */
 function quickFill(type){
   $("f_actionType").value = type;
-
-  // date default today
   const todayIso = new Date().toISOString().slice(0,10);
   if (!$("f_date").value) $("f_date").value = todayIso;
 
-  // focus the note/amount depending
   if (type === "payment" || type === "promise"){
     $("f_amount").focus();
   } else {
     $("f_note").focus();
   }
 
-  // auto channel default
   if (!$("f_channel").value) $("f_channel").value = "call";
 }
 
@@ -965,7 +906,6 @@ async function submitAction(e){
 
     else if (type === "postpone"){
       if (!date) return showInline("err","Erteleme tarihi zorunlu.");
-      // note: backend expects new_date + reason + note
       payload = { action:"createPostpone", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         new_date: date, reason: "UI_FORM", channel: channel, note: note
       };
@@ -985,25 +925,23 @@ async function submitAction(e){
       };
     }
 
-    else if (type === "xnote"){
-      // چون backend فعلاً اکشن تغییر stage به X ندارد، به عنوان NOTE ثبت می‌کنیم
-  payload = {
-    action: "moveToX",
-    user_id: u.user_id,
-    role: u.role,
-    team: u.team,
-    token: session.token,
-    case_id: caseId,
-    channel: channel || "call",
-    note: note || ""
-  };
+    else if (type === "moveToX"){
+      payload = {
+        action: "moveToX",
+        user_id: u.user_id,
+        role: u.role,
+        team: u.team,
+        token: session.token,
+        case_id: caseId,
+        channel: channel || "call",
+        note: note || ""
+      };
     }
 
     const res = await apiPost(payload);
     if (!res.ok) throw new Error(res.error || "Action failed");
 
     showInline("ok","Aksiyon kaydedildi");
-    // reset minimal fields
     $("f_amount").value = "";
     $("f_note").value = "";
 
@@ -1013,9 +951,6 @@ async function submitAction(e){
   }
 }
 
-/** =========================
- *  H) INIT
- *  ========================= */
 async function init(){
   session = loadSession();
   if (!session || !session.user || !session.token){
@@ -1044,7 +979,6 @@ async function init(){
 
   $("action-form").addEventListener("submit", submitAction);
 
-  // Element SDK optional
   if (window.elementSdk){
     const defaultConfig = { page_title:"DOSYA DETAYI", timeline_title:"ZAMAN ÇİZELGESİ" };
     window.elementSdk.init({
@@ -1070,6 +1004,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
