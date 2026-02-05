@@ -6,7 +6,9 @@
   <title>CoRM - Dosya Detayı</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- اگر این SDK ها روی هاستت هست مشکلی نیست؛ اگر نیست حذفشان کن -->
+  <!-- ✅ Config from GitHub (or your CDN). You said you already have it in GitHub. -->
+  <script src="/corm_config.js"></script>
+
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
 
@@ -14,29 +16,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 
+  <!-- (استایل‌ها همان نسخه شماست؛ کوتاه نکردم) -->
   <style>
     body { box-sizing: border-box; }
     .font-heading { font-family: 'JetBrains Mono', monospace; }
     .font-body { font-family: 'Work Sans', sans-serif; }
-
     .detail-card { background-color: #18181b; border: 1px solid #27272a; border-radius: 6px; padding: 20px; }
     .card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #71717a; font-weight: 700; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
-
     .stage-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
     .stage-ilk { background-color: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
     .stage-soz { background-color: rgba(234, 179, 8, 0.15); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
     .stage-bozuldu { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
     .stage-cerceve { background-color: rgba(220, 38, 38, 0.15); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.3); }
     .stage-x { background-color: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3); }
-
     .tag-chip { display: inline-flex; padding: 4px 10px; background-color: #27272a; border: 1px solid #3f3f46; border-radius: 3px; font-size: 10px; color: #a1a1aa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
     .fin-label { font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 4px; }
     .fin-value { font-size: 18px; font-weight: 700; color: #e4e4e7; font-family: 'JetBrains Mono', monospace; }
     .fin-value.negative { color: #fca5a5; }
     .fin-value.positive { color: #86efac; }
     .fin-value-small { font-size: 13px; font-weight: 600; color: #e4e4e7; font-family: 'JetBrains Mono', monospace; }
-
     .stage-stepper { display: flex; flex-direction: column; gap: 8px; }
     .stage-step { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 4px; border-left: 3px solid #27272a; background-color: #0f0f10; transition: all 0.2s; }
     .stage-step.active { background-color: #18181b; border-left-color: #fde047; }
@@ -44,72 +42,20 @@
     .stage-step.active .stage-step-dot { background-color: #fde047; }
     .stage-step-label { font-size: 11px; color: #71717a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .stage-step.active .stage-step-label { color: #fde047; }
-
-    .action-btn {
-      width: 100%;
-      padding: 12px 16px;
-      background-color: #27272a;
-      border: 1px solid #3f3f46;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #e4e4e7;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .action-btn { width: 100%; padding: 12px 16px; background-color: #27272a; border: 1px solid #3f3f46; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #e4e4e7; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 4px; }
     .action-btn:hover:not(:disabled) { background-color: #3f3f46; border-color: #52525b; }
     .action-btn:disabled { opacity: 0.4; cursor: not-allowed; background-color: #18181b; }
     .action-btn-label { font-size: 11px; font-weight: 700; }
     .action-btn-hint { font-size: 9px; color: #71717a; font-weight: 500; text-transform: none; letter-spacing: 0.3px; }
     .action-btn:disabled .action-btn-hint { color: #52525b; }
-
-    .btn-primary {
-      background-color: #3f3f46;
-      border: 1px solid #52525b;
-      color: #e4e4e7;
-      padding: 10px 20px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .btn-primary { background-color: #3f3f46; border: 1px solid #52525b; color: #e4e4e7; padding: 10px 20px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; transition: all 0.2s; }
     .btn-primary:hover { background-color: #52525b; border-color: #71717a; }
-
-    .form-input, .form-select, .form-textarea {
-      width: 100%;
-      background-color: #0f0f10;
-      border: 1px solid #27272a;
-      color: #e4e4e7;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.2s;
-      font-family: 'Work Sans', sans-serif;
-    }
+    .form-input, .form-select, .form-textarea { width: 100%; background-color: #0f0f10; border: 1px solid #27272a; color: #e4e4e7; padding: 8px 12px; border-radius: 4px; font-size: 12px; outline: none; transition: border-color 0.2s; font-family: 'Work Sans', sans-serif; }
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #52525b; }
-    .form-select {
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 36px;
-    }
+    .form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
     .form-textarea { resize: vertical; min-height: 80px; }
     .form-label { font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 6px; display: block; }
-
     .warning-banner { padding: 10px 12px; background-color: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; border-radius: 4px; font-size: 11px; color: #fca5a5; font-weight: 500; line-height: 1.5; }
-
     .timeline { position: relative; padding-left: 30px; }
     .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background-color: #27272a; }
     .timeline-item { position: relative; margin-bottom: 20px; padding: 16px; background-color: #18181b; border: 1px solid #27272a; border-radius: 4px; }
@@ -117,21 +63,16 @@
     .timeline-item.promise::before { background-color: #fde047; }
     .timeline-item.broken::before { background-color: #fdba74; }
     .timeline-item.framework::before { background-color: #fca5a5; }
-
     .timeline-date { font-size: 11px; color: #71717a; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
     .timeline-user { font-size: 10px; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
     .timeline-content { margin-top: 8px; font-size: 13px; color: #d4d4d8; line-height: 1.5; }
-
     .timeline-badge { display: inline-flex; padding: 3px 8px; background-color: #27272a; border-radius: 3px; font-size: 9px; color: #a1a1aa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px; }
     .timeline-badge.promise { background-color: rgba(234, 179, 8, 0.15); color: #fde047; }
     .timeline-badge.broken { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; }
-
     .alert-box { padding: 12px 14px; border-radius: 4px; font-size: 11px; line-height: 1.5; font-weight: 500; margin-bottom: 12px; }
     .alert-critical { background-color: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; color: #fca5a5; }
     .alert-warning { background-color: rgba(249, 115, 22, 0.1); border-left: 3px solid #f97316; color: #fdba74; }
-
     .lock-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background-color: #3f3f46; border-radius: 3px; margin-left: 6px; }
-
     .custom-scroll::-webkit-scrollbar { width: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #18181b; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
@@ -144,11 +85,8 @@
 <body class="h-full font-body">
   <div id="app-container" class="h-full w-full overflow-auto" style="background-color: #09090b;">
 
-    <!-- Header Bar -->
     <header class="border-b" style="background-color: #18181b; border-color: #27272a;">
       <div class="px-6 py-4 flex items-center justify-between">
-
-        <!-- Logo -->
         <div class="flex items-center gap-3">
           <div class="flex items-center justify-center">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -164,13 +102,11 @@
           </div>
         </div>
 
-        <!-- Center Title -->
         <div class="absolute left-1/2 -translate-x-1/2 text-center">
           <h1 id="page-title" class="font-heading text-lg font-bold tracking-wide text-zinc-300">DOSYA DETAYI</h1>
           <p id="breadcrumb" class="text-xs text-zinc-500 tracking-wide mt-1">Dosyalar / —</p>
         </div>
 
-        <!-- Right Info -->
         <div class="flex items-center gap-5">
           <div class="text-right">
             <div id="today-date" class="text-xs text-zinc-500 font-heading">—</div>
@@ -185,20 +121,13 @@
             Çıkış
           </button>
         </div>
-
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex h-[calc(100%-73px)]">
-
-      <!-- LEFT COLUMN (35%) -->
       <aside class="w-[35%] p-6 space-y-5 overflow-y-auto custom-scroll border-r" style="border-color: #27272a;">
-
-        <!-- Customer Card -->
         <div class="detail-card">
           <div class="card-title">MÜŞTERİ BİLGİLERİ</div>
-
           <h2 id="company-name" class="text-xl font-bold text-zinc-100 mb-2">—</h2>
           <p id="company-code" class="text-sm text-zinc-500 font-heading mb-1">—</p>
 
@@ -214,24 +143,20 @@
               <div class="fin-label">Sorumlu Kişi</div>
               <div class="text-sm font-semibold text-zinc-300 flex items-center">
                 <span id="owner-name">—</span>
-
                 <span id="lock-icon" class="lock-icon ml-2 hidden" title="Dosya kilitli">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7.5 4.5H2.5C2.22386 4.5 2 4.72386 2 5V8C2 8.27614 2.22386 8.5 2.5 8.5H7.5C7.77614 8.5 8 8.27614 8 8V5C8 4.72386 7.77614 4.5 7.5 4.5Z" stroke="#71717a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" />
                     <path d="M3.5 4.5V3C3.5 2.60218 3.65804 2.22064 3.93934 1.93934C4.22064 1.65804 4.60218 1.5 5 1.5C5.39782 1.5 5.77936 1.65804 6.06066 1.93934C6.34196 2.22064 6.5 2.60218 6.5 3V4.5" stroke="#71717a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </span>
-
               </div>
               <div id="lock-reason" class="text-xs text-zinc-500 mt-2 hidden">—</div>
             </div>
           </div>
         </div>
 
-        <!-- Financial Summary Card -->
         <div class="detail-card">
           <div class="card-title">FİNANSAL ÖZET</div>
-
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <div class="fin-label">Bakiye</div>
@@ -282,10 +207,8 @@
           </div>
         </div>
 
-        <!-- Risk & Vade Card -->
         <div class="detail-card">
           <div class="card-title">RİSK &amp; VADE</div>
-
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <div class="fin-label mb-0">Müşteri Çek/Senet</div>
@@ -319,44 +242,22 @@
           </div>
         </div>
 
-        <!-- Stage Card -->
         <div class="detail-card">
           <div class="card-title">AŞAMA (PİPELİNE)</div>
-
           <div class="mb-4">
             <span id="stage-badge" class="stage-badge stage-x">—</span>
           </div>
-
           <div class="stage-stepper">
-            <div class="stage-step" data-stage="ilk">
-              <div class="stage-step-dot"></div>
-              <div class="stage-step-label">İlk Hatırlatma</div>
-            </div>
-            <div class="stage-step" data-stage="soz">
-              <div class="stage-step-dot"></div>
-              <div class="stage-step-label">Söz Alındı</div>
-            </div>
-            <div class="stage-step" data-stage="bozuldu">
-              <div class="stage-step-dot"></div>
-              <div class="stage-step-label">Söz Bozuldu</div>
-            </div>
-            <div class="stage-step" data-stage="cerceve">
-              <div class="stage-step-dot"></div>
-              <div class="stage-step-label">Çerçeve Konuşması</div>
-            </div>
-            <div class="stage-step" data-stage="x">
-              <div class="stage-step-dot"></div>
-              <div class="stage-step-label">X Süreci</div>
-            </div>
+            <div class="stage-step" data-stage="ilk"><div class="stage-step-dot"></div><div class="stage-step-label">İlk Hatırlatma</div></div>
+            <div class="stage-step" data-stage="soz"><div class="stage-step-dot"></div><div class="stage-step-label">Söz Alındı</div></div>
+            <div class="stage-step" data-stage="bozuldu"><div class="stage-step-dot"></div><div class="stage-step-label">Söz Bozuldu</div></div>
+            <div class="stage-step" data-stage="cerceve"><div class="stage-step-dot"></div><div class="stage-step-label">Çerçeve Konuşması</div></div>
+            <div class="stage-step" data-stage="x"><div class="stage-step-dot"></div><div class="stage-step-label">X Süreci</div></div>
           </div>
         </div>
-
       </aside>
 
-      <!-- RIGHT COLUMN (65%) -->
       <section class="flex-1 p-6 overflow-y-auto custom-scroll">
-
-        <!-- Today's Actions -->
         <div class="detail-card mb-5">
           <div class="card-title">BUGÜN AKSİYON</div>
           <div class="grid grid-cols-2 gap-3">
@@ -364,17 +265,14 @@
               <span class="action-btn-label">TAHSİLAT SÖZÜ AL</span>
               <span class="action-btn-hint">Backend kuralları uygulanır</span>
             </button>
-
             <button id="btnQuickReminder" class="action-btn">
               <span class="action-btn-label">HATIRLATMA GÖNDER</span>
               <span class="action-btn-hint">WhatsApp / Mail / Arama</span>
             </button>
-
             <button id="btnQuickPayment" class="action-btn">
               <span class="action-btn-label">ÖDEME ALINDI</span>
               <span class="action-btn-hint">Tarih + tutar zorunlu</span>
             </button>
-
             <button id="btnQuickX" class="action-btn">
               <span class="action-btn-label">X SÜRECİNE AL</span>
               <span class="action-btn-hint">MVP: not olarak kaydeder</span>
@@ -382,10 +280,8 @@
           </div>
         </div>
 
-        <!-- Action Form -->
         <div class="detail-card mb-5">
           <div class="card-title">YENİ AKSİYON KAYDI</div>
-
           <div id="warningBanner" class="warning-banner mb-4 hidden">—</div>
 
           <form class="space-y-4" id="action-form">
@@ -434,33 +330,22 @@
           <div id="inlineMsg" class="mt-3 hidden p-3 rounded text-sm"></div>
         </div>
 
-        <!-- Timeline -->
         <div class="detail-card mb-5">
           <div class="flex items-center justify-between mb-5">
             <div id="timeline-title" class="card-title mb-0">ZAMAN ÇİZELGESİ</div>
-
             <div class="flex gap-4 text-xs font-heading">
-              <div class="text-zinc-500">
-                Söz: <span id="statPromise" class="text-yellow-400 font-bold">0</span>
-              </div>
-              <div class="text-zinc-500">
-                Erteleme: <span id="statPostpone" class="text-orange-400 font-bold">0</span>
-              </div>
-              <div class="text-zinc-500">
-                Son sözden beri: <span id="statSincePromise" class="text-red-400 font-bold">—</span>
-              </div>
+              <div class="text-zinc-500">Söz: <span id="statPromise" class="text-yellow-400 font-bold">0</span></div>
+              <div class="text-zinc-500">Erteleme: <span id="statPostpone" class="text-orange-400 font-bold">0</span></div>
+              <div class="text-zinc-500">Son sözden beri: <span id="statSincePromise" class="text-red-400 font-bold">—</span></div>
             </div>
           </div>
-
           <div class="timeline" id="timelineList"></div>
         </div>
 
-        <!-- System Alerts -->
         <div class="detail-card">
           <div class="card-title">SİSTEM UYARILARI</div>
           <div id="alerts"></div>
         </div>
-
       </section>
     </main>
   </div>
@@ -472,9 +357,10 @@
   }
 })();
 
-const WEBAPP_URL = "/api/corm";
-const LOGIN_PAGE = "/index.html";
-const LIST_PAGE  = "/dosyalar.html";
+// ✅ Read from GitHub config (no need to edit this file)
+const WEBAPP_URL = (window.CORM_WEBAPP_URL || "/api/corm");
+const LOGIN_PAGE = (window.CORM_LOGIN_PAGE || "/index.html");
+const LIST_PAGE  = (window.CORM_LIST_PAGE  || "/dosyalar.html");
 
 let session = null;
 let caseId = null;
@@ -639,7 +525,6 @@ function renderAll(){
     });
   }
 
-  // ✅ Owner name (show full name, fallback to id)
   $("owner-name").textContent = safe(c.owner_name || c.owner_user_id);
 
   const locked = !!c.lock_reason;
@@ -720,14 +605,12 @@ function renderTimeline(items){
 
   let promiseCount = 0;
   let postponeCount = 0;
-
   let lastPromiseDate = null;
 
   items.forEach(a=>{
     const t = String(a.action_type || "").toLowerCase();
     if (t === "promise") promiseCount++;
     if (t === "postpone") postponeCount++;
-
     if (t === "promise" && a.action_date_time){
       const d = new Date(a.action_date_time);
       if (!isNaN(d.getTime())){
@@ -759,20 +642,12 @@ function renderTimeline(items){
     let badgeText = "";
 
     if (t === "promise"){
-      cls = "promise";
-      badgeCls = "promise";
-      badgeText = "SÖZ";
+      cls = "promise"; badgeCls = "promise"; badgeText = "SÖZ";
     } else if (t === "postpone"){
-      cls = "broken";
-      badgeCls = "broken";
-      badgeText = "ERTELEME";
+      cls = "broken"; badgeCls = "broken"; badgeText = "ERTELEME";
     } else if (t === "payment"){
-      cls = "";
-      badgeCls = "";
       badgeText = "ÖDEME";
     } else {
-      cls = "";
-      badgeCls = "";
       badgeText = (t || "NOT").toUpperCase();
     }
 
@@ -825,7 +700,6 @@ function renderAlerts(){
   if (locked){
     addAlert("critical", `Kritik: Dosya kilitli (${c.lock_reason}). Bazı işlemler engellenebilir.`);
   }
-
   if (stage === "cerceve"){
     addAlert("warning", `Uyarı: Dosya ÇERÇEVE aşamasında. Promise/Postpone kısıtlanabilir.`);
   }
@@ -870,11 +744,8 @@ function quickFill(type){
   const todayIso = new Date().toISOString().slice(0,10);
   if (!$("f_date").value) $("f_date").value = todayIso;
 
-  if (type === "payment" || type === "promise"){
-    $("f_amount").focus();
-  } else {
-    $("f_note").focus();
-  }
+  if (type === "payment" || type === "promise") $("f_amount").focus();
+  else $("f_note").focus();
 
   if (!$("f_channel").value) $("f_channel").value = "call";
 }
@@ -902,39 +773,25 @@ async function submitAction(e){
       payload = { action:"createPromise", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         promise_date: date, amount: amount, channel: channel, note: note
       };
-    }
-
-    else if (type === "postpone"){
+    } else if (type === "postpone"){
       if (!date) return showInline("err","Erteleme tarihi zorunlu.");
       payload = { action:"createPostpone", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         new_date: date, reason: "UI_FORM", channel: channel, note: note
       };
-    }
-
-    else if (type === "payment"){
+    } else if (type === "payment"){
       if (!amount) return showInline("err","Ödeme tutarı zorunlu.");
       payload = { action:"createPayment", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         amount: amount, payment_type: "PAYMENT", channel: channel, note: note, payment_date: date || undefined
       };
-    }
-
-    else if (type === "note"){
+    } else if (type === "note"){
       if (!note) return showInline("err","Not zorunlu.");
       payload = { action:"createNote", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         channel: channel, note: note
       };
-    }
-
-    else if (type === "moveToX"){
-      payload = {
-        action: "moveToX",
-        user_id: u.user_id,
-        role: u.role,
-        team: u.team,
-        token: session.token,
-        case_id: caseId,
-        channel: channel || "call",
-        note: note || ""
+    } else if (type === "moveToX"){
+      // MVP: just save note
+      payload = { action:"createNote", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
+        channel: channel || "call", note: ("[MOVE_TO_X] " + (note||""))
       };
     }
 
@@ -989,7 +846,7 @@ async function init(){
         const timelineTitle = $("timeline-title");
         if (timelineTitle) timelineTitle.textContent = String(config.timeline_title || defaultConfig.timeline_title).toUpperCase();
       },
-      mapToCapabilities: (config) => ({ recolorables: [], borderables: [] }),
+      mapToCapabilities: () => ({ recolorables: [], borderables: [] }),
       mapToEditPanelValues: (config) => new Map([
         ["page_title", config.page_title || defaultConfig.page_title],
         ["timeline_title", config.timeline_title || defaultConfig.timeline_title],
@@ -1004,4 +861,3 @@ init();
 </script>
 </body>
 </html>
-
