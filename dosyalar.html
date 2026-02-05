@@ -41,6 +41,7 @@
     .switch.on .knob { left:23px; background:#fff; }
   </style>
 </head>
+
 <body class="h-full">
   <div class="min-h-full w-full" style="background:#09090b;">
     <div class="max-w-6xl mx-auto px-6 py-8">
@@ -126,9 +127,7 @@
     </div>
   </div>
 
-  <!-- =========================
-       NEW CASE MODAL (POPUP)
-       ========================= -->
+  <!-- NEW CASE MODAL -->
   <div id="modalNewCase" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="w-full max-w-2xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
       <div class="flex items-center justify-between gap-3">
@@ -204,9 +203,7 @@
     </div>
   </div>
 
-  <!-- =========================
-       NEW COLLECTOR MODAL (POPUP)
-       ========================= -->
+  <!-- NEW COLLECTOR MODAL -->
   <div id="modalNewCollector" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
       <div class="flex items-center justify-between gap-3">
@@ -245,7 +242,7 @@
 
       <div class="text-xs text-zinc-500 mt-3 leading-relaxed">
         Not: Kullanıcı rolü otomatik <span class="mono text-zinc-300">collector</span> olur.
-        <br/>Şifre: Eğer boş bırakırsanız, varsayılan olarak <span class="mono text-zinc-300">user_id</span> kullanılır.
+        <br/>Şifre SMS ile otomatik gönderilecektir.
       </div>
     </div>
   </div>
@@ -257,9 +254,9 @@ const DETAIL_PAGE = "/dosyadetayi.html";
 const SESSION_KEY = "corm_session";
 const COOKIE_NAME = "corm_session";
 
-/** VALID VALUES (Google Sheet validation) */
+/** VALID VALUES */
 const SMS_STATES_ALLOWED = ["NEW","NO_PHONE","DEBTOR_DATE_SET","DUE_INFO_SENT","FINAL_SENT","LEGAL_SENT","PAID","PAYLINK_SENT"];
-const IS_PAID_ALLOWED = ["FALSE","TRUE"]; // Sheet expects TRUE/FALSE
+const IS_PAID_ALLOWED = ["FALSE","TRUE"];
 
 /** STATE */
 let session = null;
@@ -287,13 +284,11 @@ function delCookie(name){
 
 /** Session */
 function loadSession(){
-  // 1) localStorage
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
 
-  // 2) cookie (shared www/apex)
   try {
     const c = getCookie(COOKIE_NAME);
     if (c) {
@@ -321,9 +316,16 @@ async function apiPost(payload){
   if (!res.ok) throw new Error("HTTP " + res.status);
   return await res.json();
 }
+
 async function loadCases(){
   const u = session.user;
-  const data = await apiPost({ action:"listCases", user_id:u.user_id, role:u.role, team:u.team, token: session.token });
+  const data = await apiPost({
+    action:"listCases",
+    user_id:u.user_id,
+    role:u.role,
+    team:u.team,
+    token: session.token
+  });
   if (!data.ok) throw new Error(data.error || "listCases failed");
   allCases = data.cases || [];
 }
@@ -409,7 +411,7 @@ function isOverdue(c){
 
 /** Filters */
 function buildOwnerFilter(){
-  const map = new Map(); // owner_user_id -> owner_name
+  const map = new Map();
   allCases.forEach(c => {
     const id = String(c.owner_user_id || "").trim();
     if (!id) return;
@@ -570,7 +572,7 @@ async function init(){
     }
   });
 
-  // Create case submit
+  // Create case
   $("btnCreateCase").addEventListener("click", async ()=>{
     try{
       if (!isMainAdmin()){
@@ -581,7 +583,7 @@ async function init(){
       const account_code = ($("nc_account_code").value || "").trim();
       const account_name = ($("nc_account_name").value || "").trim();
       const owner_user_id = ($("nc_owner_user_id").value || "").trim();
-      const due_date = ($("nc_due_date").value || "").trim(); // yyyy-mm-dd
+      const due_date = ($("nc_due_date").value || "").trim();
 
       const phone = ($("nc_phone").value || "").trim();
       const email = ($("nc_email").value || "").trim();
@@ -597,12 +599,6 @@ async function init(){
 
       const tg = parseTypeGroup();
       const u = session.user;
-
-      const sms_state = "NEW";
-      const is_paid = "FALSE";
-
-      if (!SMS_STATES_ALLOWED.includes(sms_state)) throw new Error("Invalid sms_state");
-      if (!IS_PAID_ALLOWED.includes(is_paid)) throw new Error("Invalid is_paid");
 
       const payload = {
         action: "createCase",
@@ -625,8 +621,8 @@ async function init(){
         type_code: tg.type_code,
         group_code: tg.group_code,
 
-        sms_state,
-        is_paid
+        sms_state: "NEW",
+        is_paid: "FALSE"
       };
 
       const resp = await apiPost(payload);
@@ -644,7 +640,7 @@ async function init(){
     }
   });
 
-  // NEW COLLECTOR
+  // NEW COLLECTOR open modal
   $("btnNewCollector").addEventListener("click", ()=>{
     if (!isMainAdmin()){
       toast("Sadece admin tahsilatçı ekleyebilir.");
@@ -657,63 +653,47 @@ async function init(){
     openModalNewCollector();
   });
 
+  // NEW COLLECTOR create
+  $("btnCreateCollector").addEventListener("click", async ()=>{
+    try {
+      if (!isMainAdmin()){
+        toast("Yetkiniz yok.");
+        return;
+      }
 
-// NEW COLLECTOR
-$("btnCreateCollector").addEventListener("click", async ()=> {
-  try {
-    if (!isMainAdmin()){
-      toast("Yetkiniz yok.");
-      return;
-    }
+      const full_name = ($("nu_full_name").value || "").trim();
+      const email = ($("nu_email").value || "").trim().toLowerCase();
+      const phone = ($("nu_phone").value || "").trim();
+      const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
 
-    const full_name = ($("nu_full_name").value || "").trim();
-    const email = ($("nu_email").value || "").trim().toLowerCase();
-    const phone = ($("nu_phone").value || "").trim();
-    const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
+      if (!full_name) { alert("Zorunlu: Ad Soyad"); return; }
+      if (!email) { alert("Zorunlu: E-posta"); return; }
+      if (!phone) { alert("Zorunlu: Telefon"); return; }
 
-    // اجباری
-    if (!full_name) { alert("Zorunlu: Ad Soyad"); return; }
-    if (!email) { alert("Zorunlu: E-posta"); return; }
-    if (!phone) { alert("Zorunlu: Telefon"); return; }
+      const u = session.user;
 
-    const u = session.user;
+      const resp = await apiPost({
+        action: "createCollector",
+        user_id: u.user_id,
+        role: u.role,
+        team: u.team,
+        token: session.token,
 
-    const resp = await apiPost({
-      action: "createCollector",
-      user_id: u.user_id,
-      role: u.role,
-      team: u.team,
-      token: session.token,
-
-      full_name,
-      email,
-      phone,
-      team_new
-    });
-
-    if (!resp.ok) throw new Error(resp.error || "createCollector failed");
-
-    toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
-    closeModalNewCollector();
-
-    // اگر بعداً مودال ساخت کیس باز شد، لیست کلکتورها آپدیت باشد
-    try { await loadCollectorsIntoSelect(); } catch {}
-
-  } catch (e) {
-    alert("Hata: " + (e.message || e));
-  }
-});
-
+        full_name,
+        email,
+        phone,
+        team_new
+      });
 
       if (!resp.ok) throw new Error(resp.error || "createCollector failed");
 
-      toast("Tahsilatçı oluşturuldu: " + (resp.collector?.user_id || ""));
+      toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
       closeModalNewCollector();
 
-      // refresh collectors list if new case modal is opened later
+      // opsiyonel: yeni kişi case modalında görünsün
       try { await loadCollectorsIntoSelect(); } catch {}
 
-    } catch(e){
+    } catch (e) {
       alert("Hata: " + (e.message || e));
     }
   });
@@ -748,9 +728,8 @@ $("btnCreateCollector").addEventListener("click", async ()=> {
     alert("Hata: " + (e.message || e));
   }
 }
+
 init();
 </script>
 </body>
 </html>
-
-
