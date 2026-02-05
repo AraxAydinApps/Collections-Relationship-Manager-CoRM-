@@ -658,36 +658,46 @@ async function init(){
   });
 
   $("btnCreateCollector").addEventListener("click", async ()=>{
-    try{
-      if (!isMainAdmin()){
-        toast("Yetkiniz yok.");
-        return;
-      }
+  try{
+    if (!isMainAdmin()){
+      toast("Yetkiniz yok.");
+      return;
+    }
 
-      const full_name = ($("nu_full_name").value || "").trim();
-      const email = ($("nu_email").value || "").trim().toLowerCase();
-      const phone = ($("nu_phone").value || "").trim();
-      const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
+    const full_name = ($("nu_full_name").value || "").trim();
+    const email = ($("nu_email").value || "").trim().toLowerCase();
+    const phone = ($("nu_phone").value || "").trim();
+    const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
 
-      if (!full_name){
-        alert("Zorunlu: Ad Soyad");
-        return;
-      }
+    // ✅ اجباری
+    if (!full_name) { alert("Zorunlu: Ad Soyad"); return; }
+    if (!email) { alert("Zorunlu: E-posta"); return; }
+    if (!phone) { alert("Zorunlu: Telefon"); return; }
 
-      const u = session.user;
+    const u = session.user;
 
-      const resp = await apiPost({
-        action: "createCollector",
-        user_id: u.user_id,
-        role: u.role,
-        team: u.team,
-        token: session.token,
+    const resp = await apiPost({
+      action: "createCollector",
+      user_id: u.user_id,
+      role: u.role,
+      team: u.team,
+      token: session.token,
 
-        full_name,
-        email,
-        phone,
-        team_new
-      });
+      full_name,
+      email,
+      phone,
+      team_new
+    });
+
+    if (!resp.ok) throw new Error(resp.error || "createCollector failed");
+
+    toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
+    closeModalNewCollector();
+
+  } catch(e){
+    alert("Hata: " + (e.message || e));
+  }
+});
 
       if (!resp.ok) throw new Error(resp.error || "createCollector failed");
 
@@ -736,3 +746,4 @@ init();
 </script>
 </body>
 </html>
+
