@@ -657,8 +657,10 @@ async function init(){
     openModalNewCollector();
   });
 
-  $("btnCreateCollector").addEventListener("click", async ()=>{
-  try{
+
+// NEW COLLECTOR
+$("btnCreateCollector").addEventListener("click", async ()=> {
+  try {
     if (!isMainAdmin()){
       toast("Yetkiniz yok.");
       return;
@@ -669,7 +671,7 @@ async function init(){
     const phone = ($("nu_phone").value || "").trim();
     const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
 
-    // ✅ اجباری
+    // اجباری
     if (!full_name) { alert("Zorunlu: Ad Soyad"); return; }
     if (!email) { alert("Zorunlu: E-posta"); return; }
     if (!phone) { alert("Zorunlu: Telefon"); return; }
@@ -694,10 +696,14 @@ async function init(){
     toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
     closeModalNewCollector();
 
-  } catch(e){
+    // اگر بعداً مودال ساخت کیس باز شد، لیست کلکتورها آپدیت باشد
+    try { await loadCollectorsIntoSelect(); } catch {}
+
+  } catch (e) {
     alert("Hata: " + (e.message || e));
   }
 });
+
 
       if (!resp.ok) throw new Error(resp.error || "createCollector failed");
 
@@ -746,4 +752,5 @@ init();
 </script>
 </body>
 </html>
+
 
