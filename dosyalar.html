@@ -252,7 +252,6 @@ function loadSession(){
     const c = getCookie(COOKIE_NAME);
     if (c) {
       const obj = JSON.parse(c);
-      // repopulate localStorage for current host
       localStorage.setItem(SESSION_KEY, JSON.stringify(obj));
       return obj;
     }
@@ -285,7 +284,6 @@ async function loadCases(){
 
 /** Role / permissions */
 function isMainAdmin(){
-  // Front kontrol: فقط admin
   return session?.user?.role === "admin";
 }
 
@@ -353,16 +351,30 @@ function isOverdue(c){
   return num(c.overdue_balance) < 0;
 }
 
-/** Filters */
+/** Filters (UPDATED: show owner_name but filter by owner_user_id) */
 function buildOwnerFilter(){
-  const set = new Set(allCases.map(c => String(c.owner_user_id||"").trim()).filter(Boolean));
+  // build unique owners with names
+  const map = new Map(); // owner_user_id -> owner_name
+  allCases.forEach(c => {
+    const id = String(c.owner_user_id || "").trim();
+    if (!id) return;
+    const name = String(c.owner_name || "").trim() || id;
+    if (!map.has(id)) map.set(id, name);
+  });
+
   const sel = $("fOwner");
-  sel.innerHTML = `<option value="">Tümü</option>` + [...set].sort().map(x => `<option value="${x}">${x}</option>`).join("");
+  const items = [...map.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a,b) => a.name.localeCompare(b.name, "tr"));
+
+  sel.innerHTML =
+    `<option value="">Tümü</option>` +
+    items.map(x => `<option value="${x.id}">${x.name}</option>`).join("");
 }
 
 function applyFilters(){
   const fStage = $("fStage").value.trim().toLowerCase();
-  const fOwner = $("fOwner").value.trim();
+  const fOwner = $("fOwner").value.trim(); // owner_user_id
   const fBroken = $("fBroken").value.trim();
   const fSearch = $("fSearch").value.trim().toLowerCase();
   const onlyOverdue = $("tOverdue").classList.contains("on");
@@ -371,7 +383,7 @@ function applyFilters(){
   let list = [...allCases];
 
   if (fStage) list = list.filter(c => String(c.stage||"").toLowerCase() === fStage);
-  if (fOwner) list = list.filter(c => String(c.owner_user_id||"") === fOwner);
+  if (fOwner) list = list.filter(c => String(c.owner_user_id||"").trim() === fOwner);
 
   if (fBroken === "1") list = list.filter(c => num(c.broken_promise_count) > 0);
   if (fBroken === "0") list = list.filter(c => num(c.broken_promise_count) <= 0);
@@ -383,7 +395,8 @@ function applyFilters(){
       const a = String(c.account_name||"").toLowerCase();
       const b = String(c.account_code||"").toLowerCase();
       const s = String(c.stage||"").toLowerCase();
-      return a.includes(fSearch) || b.includes(fSearch) || s.includes(fSearch);
+      const o = String(c.owner_name||"").toLowerCase();
+      return a.includes(fSearch) || b.includes(fSearch) || s.includes(fSearch) || o.includes(fSearch);
     });
   }
 
@@ -418,6 +431,8 @@ function renderCards(list){
     const overdue = isOverdue(c);
     const ov = num(c.overdue_balance);
 
+    const ownerName = (c.owner_name || "").trim() || String(c.owner_user_id || "").trim() || "-";
+
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
@@ -432,7 +447,11 @@ function renderCards(list){
               <span>${stageLabel(c.stage)}</span>
             </span>
           </div>
+
+          <!-- optional: show collector name on card -->
+          <div class="text-xs text-zinc-500 mt-2">Sorumlu: <span class="text-zinc-300">${ownerName}</span></div>
         </div>
+
         <div class="text-right">
           <div class="text-lg font-bold ${overdue ? "text-rose-200" : "text-zinc-100"}">${moneyTRY(ov)}</div>
           <div class="text-xs ${overdue ? "text-rose-300" : "text-zinc-500"}">${overdue ? "Gecikmiş" : "—"}</div>
@@ -522,9 +541,8 @@ async function init(){
       const tg = parseTypeGroup();
       const u = session.user;
 
-      // IMPORTANT: enforce Sheet-valid values
-      const sms_state = "NEW";     // allowed
-      const is_paid = "FALSE";     // allowed (TRUE/FALSE)
+      const sms_state = "NEW";
+      const is_paid = "FALSE";
 
       if (!SMS_STATES_ALLOWED.includes(sms_state)) throw new Error("Invalid sms_state");
       if (!IS_PAID_ALLOWED.includes(is_paid)) throw new Error("Invalid is_paid");
@@ -550,7 +568,6 @@ async function init(){
         type_code: tg.type_code,
         group_code: tg.group_code,
 
-        // send explicit values so Apps Script writes correct validations
         sms_state,
         is_paid
       };
@@ -570,7 +587,6 @@ async function init(){
     }
   });
 
-  // New collector (later)
   $("btnNewCollector").addEventListener("click", ()=> toast("Yeni Tahsilatçı: MVP'de yakında."));
 
   $("btnRefresh").addEventListener("click", async ()=>{
