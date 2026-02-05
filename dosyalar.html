@@ -204,6 +204,52 @@
     </div>
   </div>
 
+  <!-- =========================
+       NEW COLLECTOR MODAL (POPUP)
+       ========================= -->
+  <div id="modalNewCollector" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="text-xl font-bold text-zinc-100">Yeni Tahsilatçı Oluştur</div>
+          <div class="text-sm text-zinc-400 mt-1">Sadece ana admin tahsilatçı ekleyebilir.</div>
+        </div>
+        <button id="btnCloseNewCollector" class="btn2">Kapat</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+        <div class="md:col-span-2">
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Ad Soyad</div>
+          <input id="nu_full_name" class="inp w-full" placeholder="Örn: Ahmet Yılmaz" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">E-posta</div>
+          <input id="nu_email" class="inp w-full" placeholder="ornek@firma.com" />
+        </div>
+
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Telefon</div>
+          <input id="nu_phone" class="inp w-full" placeholder="+90..." />
+        </div>
+
+        <div class="md:col-span-2">
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Team</div>
+          <input id="nu_team" class="inp w-full" placeholder="Örn: TeamA (boşsa oturum team'i)" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 mt-5">
+        <button id="btnCreateCollector" class="btn">Oluştur</button>
+      </div>
+
+      <div class="text-xs text-zinc-500 mt-3 leading-relaxed">
+        Not: Kullanıcı rolü otomatik <span class="mono text-zinc-300">collector</span> olur.
+        <br/>Şifre: Eğer boş bırakırsanız, varsayılan olarak <span class="mono text-zinc-300">user_id</span> kullanılır.
+      </div>
+    </div>
+  </div>
+
 <script>
 /** CONFIG */
 const WEBAPP_URL = "/api/corm";
@@ -296,12 +342,22 @@ function closeModalNewCase(){
   $("modalNewCase").classList.add("hidden");
   $("modalNewCase").classList.remove("flex");
 }
+function openModalNewCollector(){
+  $("modalNewCollector").classList.remove("hidden");
+  $("modalNewCollector").classList.add("flex");
+}
+function closeModalNewCollector(){
+  $("modalNewCollector").classList.add("hidden");
+  $("modalNewCollector").classList.remove("flex");
+}
+
 function parseTypeGroup(){
   const raw = ($("nc_type_group").value || "").trim();
   if (!raw) return { type_code:"", group_code:"" };
   const parts = raw.split("|").map(x=>x.trim());
   return { type_code: parts[0] || "", group_code: parts[1] || "" };
 }
+
 async function loadCollectorsIntoSelect(){
   const sel = $("nc_owner_user_id");
   sel.innerHTML = `<option value="">Yükleniyor...</option>`;
@@ -351,9 +407,8 @@ function isOverdue(c){
   return num(c.overdue_balance) < 0;
 }
 
-/** Filters (UPDATED: show owner_name but filter by owner_user_id) */
+/** Filters */
 function buildOwnerFilter(){
-  // build unique owners with names
   const map = new Map(); // owner_user_id -> owner_name
   allCases.forEach(c => {
     const id = String(c.owner_user_id || "").trim();
@@ -374,7 +429,7 @@ function buildOwnerFilter(){
 
 function applyFilters(){
   const fStage = $("fStage").value.trim().toLowerCase();
-  const fOwner = $("fOwner").value.trim(); // owner_user_id
+  const fOwner = $("fOwner").value.trim();
   const fBroken = $("fBroken").value.trim();
   const fSearch = $("fSearch").value.trim().toLowerCase();
   const onlyOverdue = $("tOverdue").classList.contains("on");
@@ -430,7 +485,6 @@ function renderCards(list){
   list.forEach(c => {
     const overdue = isOverdue(c);
     const ov = num(c.overdue_balance);
-
     const ownerName = (c.owner_name || "").trim() || String(c.owner_user_id || "").trim() || "-";
 
     const el = document.createElement("div");
@@ -447,8 +501,6 @@ function renderCards(list){
               <span>${stageLabel(c.stage)}</span>
             </span>
           </div>
-
-          <!-- optional: show collector name on card -->
           <div class="text-xs text-zinc-500 mt-2">Sorumlu: <span class="text-zinc-300">${ownerName}</span></div>
         </div>
 
@@ -497,6 +549,11 @@ async function init(){
   $("btnCloseNewCase").addEventListener("click", closeModalNewCase);
   $("modalNewCase").addEventListener("click", (e)=>{
     if (e.target === $("modalNewCase")) closeModalNewCase();
+  });
+
+  $("btnCloseNewCollector").addEventListener("click", closeModalNewCollector);
+  $("modalNewCollector").addEventListener("click", (e)=>{
+    if (e.target === $("modalNewCollector")) closeModalNewCollector();
   });
 
   // NEW CASE
@@ -587,7 +644,63 @@ async function init(){
     }
   });
 
-  $("btnNewCollector").addEventListener("click", ()=> toast("Yeni Tahsilatçı: MVP'de yakında."));
+  // NEW COLLECTOR
+  $("btnNewCollector").addEventListener("click", ()=>{
+    if (!isMainAdmin()){
+      toast("Sadece admin tahsilatçı ekleyebilir.");
+      return;
+    }
+    $("nu_full_name").value = "";
+    $("nu_email").value = "";
+    $("nu_phone").value = "";
+    $("nu_team").value = "";
+    openModalNewCollector();
+  });
+
+  $("btnCreateCollector").addEventListener("click", async ()=>{
+    try{
+      if (!isMainAdmin()){
+        toast("Yetkiniz yok.");
+        return;
+      }
+
+      const full_name = ($("nu_full_name").value || "").trim();
+      const email = ($("nu_email").value || "").trim().toLowerCase();
+      const phone = ($("nu_phone").value || "").trim();
+      const team_new = ($("nu_team").value || "").trim() || (session?.user?.team || "");
+
+      if (!full_name){
+        alert("Zorunlu: Ad Soyad");
+        return;
+      }
+
+      const u = session.user;
+
+      const resp = await apiPost({
+        action: "createCollector",
+        user_id: u.user_id,
+        role: u.role,
+        team: u.team,
+        token: session.token,
+
+        full_name,
+        email,
+        phone,
+        team_new
+      });
+
+      if (!resp.ok) throw new Error(resp.error || "createCollector failed");
+
+      toast("Tahsilatçı oluşturuldu: " + (resp.collector?.user_id || ""));
+      closeModalNewCollector();
+
+      // refresh collectors list if new case modal is opened later
+      try { await loadCollectorsIntoSelect(); } catch {}
+
+    } catch(e){
+      alert("Hata: " + (e.message || e));
+    }
+  });
 
   $("btnRefresh").addEventListener("click", async ()=>{
     try {
