@@ -5,40 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CoRM - Dosyalar</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Config from root (Vercel serves it) -->
+  <script src="/corm_config.js"></script>
+
   <style>
     body { box-sizing:border-box; }
-    .sel, .inp {
+
+    .sel, .inp{
       background:#111113; border:1px solid #27272a; color:#e4e4e7;
       padding:10px 12px; border-radius:10px; font-size:13px; outline:none;
     }
-    .sel:focus, .inp:focus { border-color:#52525b; }
-    .btn {
+    .sel:focus, .inp:focus{ border-color:#52525b; }
+
+    .btn{
       background:#e4e4e7; color:#09090b; border-radius:10px;
       padding:10px 14px; font-weight:700; font-size:13px;
     }
-    .btn2 {
+    .btn2{
       background:#18181b; color:#e4e4e7; border:1px solid #27272a; border-radius:10px;
       padding:10px 14px; font-weight:700; font-size:13px;
     }
-    .card {
+
+    .card{
       background:#121214; border:1px solid #27272a; border-radius:16px;
       padding:18px; cursor:pointer; transition:transform .08s ease, border-color .2s ease;
     }
-    .card:hover { transform: translateY(-1px); border-color:#3f3f46; }
-    .stageDot { width:10px; height:10px; border-radius:999px; display:inline-block; }
-    .s-ilk { background:#22c55e; }
-    .s-soz { background:#eab308; }
-    .s-bozuldu { background:#f97316; }
-    .s-cerceve { background:#dc2626; }
-    .s-x { background:#71717a; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .toggle { display:inline-flex; align-items:center; gap:10px; }
-    .switch { position:relative; width:44px; height:24px; background:#27272a; border:1px solid #3f3f46; border-radius:999px; cursor:pointer; }
-    .knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:999px; background:#a1a1aa; transition:left .18s ease, background .18s ease; }
-    .switch.on { background:#dc2626; border-color:#ef4444; }
-    .switch.on .knob { left:23px; background:#fff; }
+    .card:hover{ transform: translateY(-1px); border-color:#3f3f46; }
+
+    .stageDot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
+    .s-ilk{ background:#22c55e; }
+    .s-soz{ background:#eab308; }
+    .s-bozuldu{ background:#f97316; }
+    .s-cerceve{ background:#dc2626; }
+    .s-x{ background:#71717a; }
+
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    .toggle{ display:inline-flex; align-items:center; gap:10px; }
+    .switch{ position:relative; width:44px; height:24px; background:#27272a; border:1px solid #3f3f46; border-radius:999px; cursor:pointer; }
+    .knob{ position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:999px; background:#a1a1aa; transition:left .18s ease, background .18s ease; }
+    .switch.on{ background:#dc2626; border-color:#ef4444; }
+    .switch.on .knob{ left:23px; background:#fff; }
+
+    .divider{ height:1px; background:#27272a; margin:14px 0; }
+    .sectionTitle{ font-size:11px; color:#a1a1aa; text-transform:uppercase; letter-spacing:.12em; font-weight:700; }
   </style>
 </head>
+
 <body class="h-full">
   <div class="min-h-full w-full" style="background:#09090b;">
     <div class="max-w-6xl mx-auto px-6 py-8">
@@ -94,7 +108,7 @@
 
           <div class="md:col-span-3">
             <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Arama</div>
-            <input id="fSearch" class="inp w-full" placeholder="Firma / kod / stage" />
+            <input id="fSearch" class="inp w-full" placeholder="Firma / hesap kodu / tip / grup / sorumlu / aşama" />
           </div>
 
           <div class="md:col-span-1">
@@ -103,7 +117,9 @@
               <option value="priority">Öncelik</option>
               <option value="name">İsim</option>
               <option value="balance">Bakiye</option>
-              <option value="overdue">Gecikmiş</option>
+              <option value="overdue">Geciken</option>
+              <option value="debt">Borç</option>
+              <option value="credit">Alacak</option>
             </select>
           </div>
         </div>
@@ -126,7 +142,7 @@
 
   <!-- NEW CASE MODAL -->
   <div id="modalNewCase" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="w-full max-w-2xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
+    <div class="w-full max-w-3xl rounded-2xl border border-zinc-700 bg-zinc-950 p-5">
       <div class="flex items-center justify-between gap-3">
         <div>
           <div class="text-xl font-bold text-zinc-100">Yeni Dosya (Case Oluştur)</div>
@@ -135,48 +151,129 @@
         <button id="btnCloseNewCase" class="btn2">Kapat</button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+      <div class="divider"></div>
+      <div class="sectionTitle mb-3">MÜŞTERİ VERİSİ (CUSTOMER COLUMNS)</div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Customer columns in order -->
         <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Code</div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Hesap Kodu</div>
           <input id="nc_account_code" class="inp w-full" placeholder="120.01.999" />
         </div>
         <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Account Name</div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Hesap Adı</div>
           <input id="nc_account_name" class="inp w-full" placeholder="Firma Adı" />
         </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Tip Kodu</div>
+          <input id="nc_type_code" class="inp w-full" placeholder="Tip Kodu" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Grup Kodu</div>
+          <input id="nc_group_code" class="inp w-full" placeholder="Grup Kodu" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Borç Tutar</div>
+          <input id="nc_debt_amount" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Alacak Tutar</div>
+          <input id="nc_credit_amount" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Bakiye</div>
+          <input id="nc_balance" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Müşteri Çek/Senet Riski</div>
+          <input id="nc_customer_risk" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Kendi Çek/Senet Riski</div>
+          <input id="nc_own_risk" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Borç Ort. Vade (gün)</div>
+          <input id="nc_avg_debt_maturity" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Alacak Ort. Vade (gün)</div>
+          <input id="nc_avg_credit_maturity" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Bakiye Ort. Vade (gün)</div>
+          <input id="nc_avg_balance_maturity" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Alacak Tahsil Süresi (gün)</div>
+          <input id="nc_avg_collection_time" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Tahsilat Tarihi</div>
+          <input id="nc_last_collection_date" type="date" class="inp w-full" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Tahsilat Tutarı</div>
+          <input id="nc_last_collection_amount" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Tahsilat İşlem Tipi</div>
+          <input id="nc_last_collection_type" class="inp w-full" placeholder="EFT / Nakit / ..." />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son 30 Gün Satış</div>
+          <input id="nc_last_30d_sales" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Tahsilat Geçen Gün</div>
+          <input id="nc_days_since_last_collection" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">E-Posta</div>
+          <input id="nc_email" class="inp w-full" placeholder="mail@firma.com" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Geciken Bakiye Bekleme Süresi (gün)</div>
+          <input id="nc_overdue_wait_days" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Geciken Bakiye</div>
+          <input id="nc_overdue_balance" class="inp w-full" placeholder="-1000 (gecikmiş)" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Ödeme Geçen Gün</div>
+          <input id="nc_days_since_last_payment" class="inp w-full" placeholder="0" />
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Son Ödeme Tutarı</div>
+          <input id="nc_last_payment_amount" class="inp w-full" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="sectionTitle mb-3">SİSTEM ALANLARI (PROGRAMMING COLUMNS)</div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Collector (Owner)</div>
           <select id="nc_owner_user_id" class="sel w-full">
             <option value="">Yükleniyor...</option>
           </select>
         </div>
+
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Due Date</div>
           <input id="nc_due_date" type="date" class="inp w-full" />
         </div>
+
         <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Balance</div>
-          <input id="nc_balance" class="inp w-full" placeholder="0" />
+          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Phone</div>
+          <input id="nc_phone" class="inp w-full" placeholder="05xx..., +90..." />
         </div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Overdue Balance</div>
-          <input id="nc_overdue_balance" class="inp w-full" placeholder="0 (gecikmişse negatif)" />
-        </div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Phone (TR)</div>
-          <input id="nc_phone" class="inp w-full" placeholder="05xx..., 5xx..., +90..." />
-        </div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Email</div>
-          <input id="nc_email" class="inp w-full" placeholder="mail@firma.com" />
-        </div>
+
         <div>
           <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Postpone Limit</div>
           <input id="nc_postpone_limit" class="inp w-full" placeholder="2" />
-        </div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-zinc-500 mb-2 font-semibold">Type / Group</div>
-          <input id="nc_type_group" class="inp w-full" placeholder="type_code | group_code (opsiyonel)" />
         </div>
       </div>
 
@@ -236,14 +333,24 @@
   </div>
 
 <script>
-/** CONFIG */
-const WEBAPP_URL = "/api/corm";
-const DETAIL_PAGE = "/dosyadetayi.html";
-const SESSION_KEY = "corm_session";
-const COOKIE_NAME = "corm_session";
+(function forceWww(){
+  if (location.hostname === "arazad.xyz") {
+    location.replace("https://www.arazad.xyz" + location.pathname + location.search + location.hash);
+  }
+})();
 
-const SMS_STATES_ALLOWED = ["NEW","NO_PHONE","DEBTOR_DATE_SET","DUE_INFO_SENT","FINAL_SENT","LEGAL_SENT","PAID","PAYLINK_SENT"];
-const IS_PAID_ALLOWED = ["FALSE","TRUE"];
+function resolveUrl(maybeUrl, fallback){
+  const v = (maybeUrl || "").toString().trim();
+  const use = v || fallback;
+  if (/^https?:\/\//i.test(use)) return use;
+  return new URL(use, window.location.origin).toString();
+}
+
+/** CONFIG (from corm_config.js) */
+const WEBAPP_URL   = resolveUrl(window.CORM_WEBAPP_URL, "/api/corm");
+const DETAIL_PAGE  = "/dosyadetayi.html";
+const LOGIN_PAGE   = (window.CORM_LOGIN_PAGE || "/index.html");
+const SESSION_KEY  = "corm_session";
 
 let session = null;
 let allCases = [];
@@ -257,34 +364,14 @@ function toast(msg){
   setTimeout(()=>t.classList.add("hidden"), 2500);
 }
 
-function getCookie(name){
-  const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return m ? decodeURIComponent(m[2]) : null;
-}
-function delCookie(name){
-  document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.arazad.xyz; SameSite=Lax; Secure`;
-}
-
 function loadSession(){
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-
-  try {
-    const c = getCookie(COOKIE_NAME);
-    if (c) {
-      const obj = JSON.parse(c);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(obj));
-      return obj;
-    }
-  } catch {}
-
-  return null;
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 function clearSession(){
   try { localStorage.removeItem(SESSION_KEY); } catch {}
-  delCookie(COOKIE_NAME);
   session = null;
 }
 
@@ -295,7 +382,9 @@ async function apiPost(payload){
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("HTTP " + res.status);
-  return await res.json();
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch { throw new Error("Non-JSON response: " + text.slice(0,180)); }
 }
 
 async function loadCases(){
@@ -319,13 +408,6 @@ function closeModal(id){
   const m = $(id);
   m.classList.add("hidden");
   m.classList.remove("flex");
-}
-
-function parseTypeGroup(){
-  const raw = ($("nc_type_group").value || "").trim();
-  if (!raw) return { type_code:"", group_code:"" };
-  const parts = raw.split("|").map(x=>x.trim());
-  return { type_code: parts[0] || "", group_code: parts[1] || "" };
 }
 
 async function loadCollectorsIntoSelect(){
@@ -371,9 +453,10 @@ function num(n){
 }
 function moneyTRY(n){
   const v = num(n);
-  return v.toLocaleString("tr-TR") + " ₺";
+  return "₺" + v.toLocaleString("tr-TR");
 }
 function isOverdue(c){
+  // "Geciken Bakiye" convention: negative means overdue (same as your existing logic)
   return num(c.overdue_balance) < 0;
 }
 
@@ -407,6 +490,7 @@ function applyFilters(){
   if (fStage) list = list.filter(c => String(c.stage||"").toLowerCase() === fStage);
   if (fOwner) list = list.filter(c => String(c.owner_user_id||"").trim() === fOwner);
 
+  // still backend-driven
   if (fBroken === "1") list = list.filter(c => num(c.broken_promise_count) > 0);
   if (fBroken === "0") list = list.filter(c => num(c.broken_promise_count) <= 0);
 
@@ -414,11 +498,13 @@ function applyFilters(){
 
   if (fSearch){
     list = list.filter(c => {
-      const a = String(c.account_name||"").toLowerCase();
-      const b = String(c.account_code||"").toLowerCase();
-      const s = String(c.stage||"").toLowerCase();
-      const o = String(c.owner_name||"").toLowerCase();
-      return a.includes(fSearch) || b.includes(fSearch) || s.includes(fSearch) || o.includes(fSearch);
+      const a = String(c.account_name||"").toLowerCase();     // Hesap Adı
+      const b = String(c.account_code||"").toLowerCase();     // Hesap Kodu
+      const t = String(c.type_code||"").toLowerCase();        // Tip Kodu
+      const g = String(c.group_code||"").toLowerCase();       // Grup Kodu
+      const s = String(c.stage||"").toLowerCase();            // stage (system)
+      const o = String(c.owner_name||"").toLowerCase();       // owner (system)
+      return a.includes(fSearch) || b.includes(fSearch) || t.includes(fSearch) || g.includes(fSearch) || s.includes(fSearch) || o.includes(fSearch);
     });
   }
 
@@ -428,7 +514,12 @@ function applyFilters(){
     list.sort((a,b)=> Math.abs(num(b.balance)) - Math.abs(num(a.balance)));
   } else if (sort === "overdue"){
     list.sort((a,b)=> Math.abs(num(b.overdue_balance)) - Math.abs(num(a.overdue_balance)));
+  } else if (sort === "debt"){
+    list.sort((a,b)=> Math.abs(num(b.debt_amount)) - Math.abs(num(a.debt_amount)));
+  } else if (sort === "credit"){
+    list.sort((a,b)=> Math.abs(num(b.credit_amount)) - Math.abs(num(a.credit_amount)));
   } else {
+    // priority: overdue first, then stage importance, then balance
     const stageOrder = { cerceve:0, bozuldu:1, soz:2, ilk:3, x:4 };
     list.sort((a,b)=>{
       const ao = isOverdue(a)?0:1;
@@ -451,42 +542,64 @@ function renderCards(list){
 
   list.forEach(c => {
     const overdue = isOverdue(c);
-    const ov = num(c.overdue_balance);
-    const ownerName = (c.owner_name || "").trim() || String(c.owner_user_id || "").trim() || "-";
+
+    const ownerName = (String(c.owner_name || "").trim()) || String(c.owner_user_id || "").trim() || "-";
 
     const el = document.createElement("div");
     el.className = "card";
+
+    const balance = num(c.balance);
+    const overdueBal = num(c.overdue_balance);
+    const debt = num(c.debt_amount);
+    const credit = num(c.credit_amount);
+
+    const typeGroup = [String(c.type_code||"").trim(), String(c.group_code||"").trim()].filter(Boolean).join(" / ");
+
     el.innerHTML = `
       <div class="flex items-start justify-between gap-3">
         <div>
-          <div class="text-xl font-bold text-zinc-100">${c.account_name || "-"}</div>
+          <div class="text-xl font-bold text-zinc-100">${escapeHtml(c.account_name || "-")}</div>
+
           <div class="text-sm text-zinc-400 mt-1">
-            <span class="mono">${c.account_code || "-"}</span>
+            <span class="mono">${escapeHtml(c.account_code || "-")}</span>
+            ${typeGroup ? `<span class="mx-2">•</span><span class="mono text-zinc-500">${escapeHtml(typeGroup)}</span>` : ``}
             <span class="mx-2">•</span>
             <span class="inline-flex items-center gap-2">
               <span class="stageDot ${stageDotClass(c.stage)}"></span>
-              <span>${stageLabel(c.stage)}</span>
+              <span>${escapeHtml(stageLabel(c.stage))}</span>
             </span>
           </div>
-          <div class="text-xs text-zinc-500 mt-2">Sorumlu: <span class="text-zinc-300">${ownerName}</span></div>
+
+          <div class="text-xs text-zinc-500 mt-2">Sorumlu: <span class="text-zinc-300">${escapeHtml(ownerName)}</span></div>
         </div>
 
         <div class="text-right">
-          <div class="text-lg font-bold ${overdue ? "text-rose-200" : "text-zinc-100"}">${moneyTRY(ov)}</div>
-          <div class="text-xs ${overdue ? "text-rose-300" : "text-zinc-500"}">${overdue ? "Gecikmiş" : "—"}</div>
+          <div class="text-lg font-bold text-zinc-100">${moneyTRY(balance)}</div>
+          <div class="text-xs ${overdue ? "text-rose-300" : "text-zinc-500"}">
+            ${overdue ? ("Geciken: " + moneyTRY(overdueBal)) : "Geciken: —"}
+          </div>
         </div>
       </div>
 
-      <div class="mt-4 flex items-center justify-between text-sm">
+      <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div class="text-zinc-400">
-          Promise: <span class="text-zinc-200 mono">${c.last_promise_date || "-"}</span>
+          Borç: <span class="text-zinc-200 mono">${moneyTRY(debt)}</span>
+        </div>
+        <div class="text-zinc-400 text-right">
+          Alacak: <span class="text-zinc-200 mono">${moneyTRY(credit)}</span>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between text-sm">
+        <div class="text-zinc-400">
+          Son Tahsilat: <span class="text-zinc-200 mono">${escapeHtml(c.last_collection_date || "-")}</span>
         </div>
         <div class="text-zinc-400">
           Erteleme: <span class="text-zinc-200 mono">${num(c.postpone_used)}/${num(c.postpone_limit)}</span>
         </div>
       </div>
 
-      ${c.lock_reason ? `<div class="mt-2 text-sm text-amber-300">Kilit: <span class="mono">${c.lock_reason}</span></div>` : ``}
+      ${c.lock_reason ? `<div class="mt-2 text-sm text-amber-300">Kilit: <span class="mono">${escapeHtml(c.lock_reason)}</span></div>` : ``}
     `;
 
     el.addEventListener("click", ()=> {
@@ -495,12 +608,28 @@ function renderCards(list){
 
     grid.appendChild(el);
   });
+
+  if (!list.length){
+    const empty = document.createElement("div");
+    empty.className = "text-sm text-zinc-500";
+    empty.textContent = "Sonuç bulunamadı.";
+    grid.appendChild(empty);
+  }
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 async function init(){
   session = loadSession();
   if (!session || !session.user || !session.token){
-    window.location.href = "/index.html";
+    window.location.href = LOGIN_PAGE;
     return;
   }
 
@@ -508,7 +637,7 @@ async function init(){
 
   $("btnLogout").addEventListener("click", ()=>{
     clearSession();
-    window.location.href = "/index.html";
+    window.location.href = LOGIN_PAGE;
   });
 
   // close modals
@@ -539,31 +668,54 @@ async function init(){
         return;
       }
 
+      // Customer columns (snake_case mapping used in backend)
       const account_code = ($("nc_account_code").value || "").trim();
       const account_name = ($("nc_account_name").value || "").trim();
-      const owner_user_id = ($("nc_owner_user_id").value || "").trim();
-      const due_date = ($("nc_due_date").value || "").trim();
+      const type_code    = ($("nc_type_code").value || "").trim();
+      const group_code   = ($("nc_group_code").value || "").trim();
 
-      const phone = ($("nc_phone").value || "").trim();
+      const debt_amount  = ($("nc_debt_amount").value || "").trim();
+      const credit_amount= ($("nc_credit_amount").value || "").trim();
+      const balance      = ($("nc_balance").value || "").trim();
+
+      const customer_risk = ($("nc_customer_risk").value || "").trim();
+      const own_risk      = ($("nc_own_risk").value || "").trim();
+
+      const avg_debt_maturity    = ($("nc_avg_debt_maturity").value || "").trim();
+      const avg_credit_maturity  = ($("nc_avg_credit_maturity").value || "").trim();
+      const avg_balance_maturity = ($("nc_avg_balance_maturity").value || "").trim();
+      const avg_collection_time  = ($("nc_avg_collection_time").value || "").trim();
+
+      const last_collection_date   = ($("nc_last_collection_date").value || "").trim();
+      const last_collection_amount = ($("nc_last_collection_amount").value || "").trim();
+      const last_collection_type   = ($("nc_last_collection_type").value || "").trim();
+
+      const last_30d_sales = ($("nc_last_30d_sales").value || "").trim();
+      const days_since_last_collection = ($("nc_days_since_last_collection").value || "").trim();
+
       const email = ($("nc_email").value || "").trim();
+      const overdue_wait_days = ($("nc_overdue_wait_days").value || "").trim();
+      const overdue_balance   = ($("nc_overdue_balance").value || "").trim();
 
-      const balance = ($("nc_balance").value || "").trim();
-      const overdue_balance = ($("nc_overdue_balance").value || "").trim();
+      const days_since_last_payment = ($("nc_days_since_last_payment").value || "").trim();
+      const last_payment_amount     = ($("nc_last_payment_amount").value || "").trim();
+
+      // System columns
+      const owner_user_id  = ($("nc_owner_user_id").value || "").trim();
+      const due_date       = ($("nc_due_date").value || "").trim();
+      const phone          = ($("nc_phone").value || "").trim();
       const postpone_limit = ($("nc_postpone_limit").value || "").trim();
 
       if (!account_code || !account_name || !owner_user_id || !due_date){
-        alert("Zorunlu: account_code, account_name, owner, due_date");
+        alert("Zorunlu: Hesap Kodu, Hesap Adı, Owner, Due Date");
         return;
       }
 
-      const tg = parseTypeGroup();
       const u = session.user;
 
+      // defaults
       const sms_state = "NEW";
       const is_paid = "FALSE";
-
-      if (!SMS_STATES_ALLOWED.includes(sms_state)) throw new Error("Invalid sms_state");
-      if (!IS_PAID_ALLOWED.includes(is_paid)) throw new Error("Invalid is_paid");
 
       const resp = await apiPost({
         action: "createCase",
@@ -574,15 +726,40 @@ async function init(){
 
         account_code,
         account_name,
+        type_code,
+        group_code,
+
+        debt_amount,
+        credit_amount,
+        balance,
+
+        customer_risk,
+        own_risk,
+
+        avg_debt_maturity,
+        avg_credit_maturity,
+        avg_balance_maturity,
+        avg_collection_time,
+
+        last_collection_date,
+        last_collection_amount,
+        last_collection_type,
+
+        last_30d_sales,
+        days_since_last_collection,
+
+        email,
+        overdue_wait_days,
+        overdue_balance,
+
+        days_since_last_payment,
+        last_payment_amount,
+
         owner_user_id,
         due_date,
         phone,
-        email,
-        balance,
-        overdue_balance,
         postpone_limit,
-        type_code: tg.type_code,
-        group_code: tg.group_code,
+
         sms_state,
         is_paid
       });
@@ -649,7 +826,6 @@ async function init(){
       toast("Tahsilatçı oluşturuldu. Şifre SMS ile gönderildi.");
       closeModal("modalNewCollector");
 
-      // refresh collectors list for New Case modal usage
       try { await loadCollectorsIntoSelect(); } catch {}
 
     } catch(e){
