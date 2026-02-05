@@ -6,7 +6,7 @@
   <title>CoRM - Dosya Detayı</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- ✅ Config from GitHub (or your CDN). You said you already have it in GitHub. -->
+  <!-- ✅ Config (served by Vercel from root) -->
   <script src="/corm_config.js"></script>
 
   <script src="/_sdk/element_sdk.js"></script>
@@ -16,25 +16,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 
-  <!-- (استایل‌ها همان نسخه شماست؛ کوتاه نکردم) -->
   <style>
     body { box-sizing: border-box; }
     .font-heading { font-family: 'JetBrains Mono', monospace; }
     .font-body { font-family: 'Work Sans', sans-serif; }
+
     .detail-card { background-color: #18181b; border: 1px solid #27272a; border-radius: 6px; padding: 20px; }
     .card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #71717a; font-weight: 700; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+
     .stage-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
     .stage-ilk { background-color: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
     .stage-soz { background-color: rgba(234, 179, 8, 0.15); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
     .stage-bozuldu { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
     .stage-cerceve { background-color: rgba(220, 38, 38, 0.15); color: #fca5a5; border: 1px solid rgba(220, 38, 38, 0.3); }
     .stage-x { background-color: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3); }
+
     .tag-chip { display: inline-flex; padding: 4px 10px; background-color: #27272a; border: 1px solid #3f3f46; border-radius: 3px; font-size: 10px; color: #a1a1aa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
     .fin-label { font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 4px; }
     .fin-value { font-size: 18px; font-weight: 700; color: #e4e4e7; font-family: 'JetBrains Mono', monospace; }
     .fin-value.negative { color: #fca5a5; }
     .fin-value.positive { color: #86efac; }
     .fin-value-small { font-size: 13px; font-weight: 600; color: #e4e4e7; font-family: 'JetBrains Mono', monospace; }
+
     .stage-stepper { display: flex; flex-direction: column; gap: 8px; }
     .stage-step { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 4px; border-left: 3px solid #27272a; background-color: #0f0f10; transition: all 0.2s; }
     .stage-step.active { background-color: #18181b; border-left-color: #fde047; }
@@ -42,37 +46,93 @@
     .stage-step.active .stage-step-dot { background-color: #fde047; }
     .stage-step-label { font-size: 11px; color: #71717a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .stage-step.active .stage-step-label { color: #fde047; }
-    .action-btn { width: 100%; padding: 12px 16px; background-color: #27272a; border: 1px solid #3f3f46; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #e4e4e7; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #e4e4e7;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
     .action-btn:hover:not(:disabled) { background-color: #3f3f46; border-color: #52525b; }
     .action-btn:disabled { opacity: 0.4; cursor: not-allowed; background-color: #18181b; }
     .action-btn-label { font-size: 11px; font-weight: 700; }
     .action-btn-hint { font-size: 9px; color: #71717a; font-weight: 500; text-transform: none; letter-spacing: 0.3px; }
     .action-btn:disabled .action-btn-hint { color: #52525b; }
-    .btn-primary { background-color: #3f3f46; border: 1px solid #52525b; color: #e4e4e7; padding: 10px 20px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; transition: all 0.2s; }
+
+    .btn-primary {
+      background-color: #3f3f46;
+      border: 1px solid #52525b;
+      color: #e4e4e7;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
     .btn-primary:hover { background-color: #52525b; border-color: #71717a; }
-    .form-input, .form-select, .form-textarea { width: 100%; background-color: #0f0f10; border: 1px solid #27272a; color: #e4e4e7; padding: 8px 12px; border-radius: 4px; font-size: 12px; outline: none; transition: border-color 0.2s; font-family: 'Work Sans', sans-serif; }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background-color: #0f0f10;
+      border: 1px solid #27272a;
+      color: #e4e4e7;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Work Sans', sans-serif;
+    }
     .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #52525b; }
-    .form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
     .form-textarea { resize: vertical; min-height: 80px; }
     .form-label { font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 6px; display: block; }
+
     .warning-banner { padding: 10px 12px; background-color: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; border-radius: 4px; font-size: 11px; color: #fca5a5; font-weight: 500; line-height: 1.5; }
+
     .timeline { position: relative; padding-left: 30px; }
     .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background-color: #27272a; }
     .timeline-item { position: relative; margin-bottom: 20px; padding: 16px; background-color: #18181b; border: 1px solid #27272a; border-radius: 4px; }
     .timeline-item::before { content: ''; position: absolute; left: -22px; top: 20px; width: 12px; height: 12px; border-radius: 50%; background-color: #3f3f46; border: 2px solid #09090b; }
     .timeline-item.promise::before { background-color: #fde047; }
     .timeline-item.broken::before { background-color: #fdba74; }
-    .timeline-item.framework::before { background-color: #fca5a5; }
+
     .timeline-date { font-size: 11px; color: #71717a; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
     .timeline-user { font-size: 10px; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
     .timeline-content { margin-top: 8px; font-size: 13px; color: #d4d4d8; line-height: 1.5; }
+
     .timeline-badge { display: inline-flex; padding: 3px 8px; background-color: #27272a; border-radius: 3px; font-size: 9px; color: #a1a1aa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px; }
     .timeline-badge.promise { background-color: rgba(234, 179, 8, 0.15); color: #fde047; }
     .timeline-badge.broken { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; }
+
     .alert-box { padding: 12px 14px; border-radius: 4px; font-size: 11px; line-height: 1.5; font-weight: 500; margin-bottom: 12px; }
     .alert-critical { background-color: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; color: #fca5a5; }
     .alert-warning { background-color: rgba(249, 115, 22, 0.1); border-left: 3px solid #f97316; color: #fdba74; }
+
     .lock-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background-color: #3f3f46; border-radius: 3px; margin-left: 6px; }
+
     .custom-scroll::-webkit-scrollbar { width: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #18181b; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
@@ -125,7 +185,9 @@
     </header>
 
     <main class="flex h-[calc(100%-73px)]">
+
       <aside class="w-[35%] p-6 space-y-5 overflow-y-auto custom-scroll border-r" style="border-color: #27272a;">
+
         <div class="detail-card">
           <div class="card-title">MÜŞTERİ BİLGİLERİ</div>
           <h2 id="company-name" class="text-xl font-bold text-zinc-100 mb-2">—</h2>
@@ -157,6 +219,7 @@
 
         <div class="detail-card">
           <div class="card-title">FİNANSAL ÖZET</div>
+
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <div class="fin-label">Bakiye</div>
@@ -209,6 +272,7 @@
 
         <div class="detail-card">
           <div class="card-title">RİSK &amp; VADE</div>
+
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <div class="fin-label mb-0">Müşteri Çek/Senet</div>
@@ -247,6 +311,7 @@
           <div class="mb-4">
             <span id="stage-badge" class="stage-badge stage-x">—</span>
           </div>
+
           <div class="stage-stepper">
             <div class="stage-step" data-stage="ilk"><div class="stage-step-dot"></div><div class="stage-step-label">İlk Hatırlatma</div></div>
             <div class="stage-step" data-stage="soz"><div class="stage-step-dot"></div><div class="stage-step-label">Söz Alındı</div></div>
@@ -258,6 +323,7 @@
       </aside>
 
       <section class="flex-1 p-6 overflow-y-auto custom-scroll">
+
         <div class="detail-card mb-5">
           <div class="card-title">BUGÜN AKSİYON</div>
           <div class="grid grid-cols-2 gap-3">
@@ -282,6 +348,7 @@
 
         <div class="detail-card mb-5">
           <div class="card-title">YENİ AKSİYON KAYDI</div>
+
           <div id="warningBanner" class="warning-banner mb-4 hidden">—</div>
 
           <form class="space-y-4" id="action-form">
@@ -346,6 +413,7 @@
           <div class="card-title">SİSTEM UYARILARI</div>
           <div id="alerts"></div>
         </div>
+
       </section>
     </main>
   </div>
@@ -357,8 +425,15 @@
   }
 })();
 
-// ✅ Read from GitHub config (no need to edit this file)
-const WEBAPP_URL = (window.CORM_WEBAPP_URL || "/api/corm");
+function resolveUrl(maybeUrl, fallback){
+  const v = (maybeUrl || "").toString().trim();
+  const use = v || fallback;
+  if (/^https?:\/\//i.test(use)) return use;
+  return new URL(use, window.location.origin).toString();
+}
+
+// ✅ Always read from config file
+const WEBAPP_URL = resolveUrl(window.CORM_WEBAPP_URL, "/api/corm");
 const LOGIN_PAGE = (window.CORM_LOGIN_PAGE || "/index.html");
 const LIST_PAGE  = (window.CORM_LIST_PAGE  || "/dosyalar.html");
 
@@ -379,7 +454,6 @@ function clearSession(){
   localStorage.removeItem("corm_session");
   session = null;
 }
-
 function qs(name){
   const url = new URL(window.location.href);
   return url.searchParams.get(name);
@@ -396,7 +470,6 @@ function formatDateTimeTR(iso){
   if (isNaN(d.getTime())) return "—";
   return `${pad2(d.getDate())}.${pad2(d.getMonth()+1)}.${d.getFullYear()} • ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
-
 function num(v){
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
@@ -413,15 +486,12 @@ function setFin(elId, v){
   if (n < 0) el.classList.add("negative");
   if (n > 0) el.classList.add("positive");
 }
-
 function safe(v){ return (v===null || v===undefined || v==="") ? "—" : String(v); }
-
 function splitTags(tagStr){
   const s = String(tagStr || "").trim();
   if (!s) return [];
   return s.split(/[,|;]/).map(x=>x.trim()).filter(Boolean);
 }
-
 function stageLabel(stage){
   const s = String(stage||"").toLowerCase();
   if (s==="ilk") return "İlk Hatırlatma";
@@ -431,7 +501,6 @@ function stageLabel(stage){
   if (s==="x") return "X Süreci";
   return s || "—";
 }
-
 function stageBadgeClass(stage){
   const s = String(stage||"").toLowerCase();
   if (s==="ilk") return "stage-ilk";
@@ -441,7 +510,6 @@ function stageBadgeClass(stage){
   if (s==="x") return "stage-x";
   return "stage-x";
 }
-
 function showInline(type, msg){
   const box = $("inlineMsg");
   box.classList.remove("hidden");
@@ -455,11 +523,9 @@ function showInline(type, msg){
   }
   setTimeout(()=> box.classList.add("hidden"), 3000);
 }
-
 function setToday(){
   $("today-date").textContent = formatDateTR(new Date());
 }
-
 function setUserHeader(){
   $("user-name").textContent = safe(session?.user?.full_name);
   const role = String(session?.user?.role || "");
@@ -641,27 +707,16 @@ function renderTimeline(items){
     let badgeCls = "";
     let badgeText = "";
 
-    if (t === "promise"){
-      cls = "promise"; badgeCls = "promise"; badgeText = "SÖZ";
-    } else if (t === "postpone"){
-      cls = "broken"; badgeCls = "broken"; badgeText = "ERTELEME";
-    } else if (t === "payment"){
-      badgeText = "ÖDEME";
-    } else {
-      badgeText = (t || "NOT").toUpperCase();
-    }
+    if (t === "promise"){ cls="promise"; badgeCls="promise"; badgeText="SÖZ"; }
+    else if (t === "postpone"){ cls="broken"; badgeCls="broken"; badgeText="ERTELEME"; }
+    else if (t === "payment"){ badgeText="ÖDEME"; }
+    else { badgeText=(t || "NOT").toUpperCase(); }
 
     const parts = [];
     if (a.note) parts.push(String(a.note));
-    if (a.amount !== "" && a.amount !== null && a.amount !== undefined){
-      parts.push(`Tutar: ${fmtTRY(a.amount)}`);
-    }
-    if (a.promise_date){
-      parts.push(`Tarih: ${String(a.promise_date)}`);
-    }
-    if (a.system_flag){
-      parts.push(`Flag: ${String(a.system_flag)}`);
-    }
+    if (a.amount !== "" && a.amount !== null && a.amount !== undefined) parts.push(`Tutar: ${fmtTRY(a.amount)}`);
+    if (a.promise_date) parts.push(`Tarih: ${String(a.promise_date)}`);
+    if (a.system_flag) parts.push(`Flag: ${String(a.system_flag)}`);
 
     const content = parts.length ? parts.join(" • ") : "—";
     const who = `${safe(a.created_by_user_id)} • ${safe(a.channel)}`;
@@ -697,23 +752,15 @@ function renderAlerts(){
   const stage = String(c.stage || "").toLowerCase();
   const locked = !!c.lock_reason;
 
-  if (locked){
-    addAlert("critical", `Kritik: Dosya kilitli (${c.lock_reason}). Bazı işlemler engellenebilir.`);
-  }
-  if (stage === "cerceve"){
-    addAlert("warning", `Uyarı: Dosya ÇERÇEVE aşamasında. Promise/Postpone kısıtlanabilir.`);
-  }
+  if (locked) addAlert("critical", `Kritik: Dosya kilitli (${c.lock_reason}). Bazı işlemler engellenebilir.`);
+  if (stage === "cerceve") addAlert("warning", `Uyarı: Dosya ÇERÇEVE aşamasında. Promise/Postpone kısıtlanabilir.`);
 
   const used = num(c.postpone_used);
   const limit = num(c.postpone_limit);
-  if (limit > 0 && used >= limit){
-    addAlert("critical", `Kritik: Erteleme limiti dolu (${used}/${limit}).`);
-  }
+  if (limit > 0 && used >= limit) addAlert("critical", `Kritik: Erteleme limiti dolu (${used}/${limit}).`);
 
   const broken = num(c.broken_promise_count);
-  if (broken > 0){
-    addAlert("warning", `Uyarı: Bozulan söz sayısı: ${broken}.`);
-  }
+  if (broken > 0) addAlert("warning", `Uyarı: Bozulan söz sayısı: ${broken}.`);
 
   if (!alerts.children.length){
     const div = document.createElement("div");
@@ -789,7 +836,7 @@ async function submitAction(e){
         channel: channel, note: note
       };
     } else if (type === "moveToX"){
-      // MVP: just save note
+      // MVP: save as note
       payload = { action:"createNote", user_id:u.user_id, role:u.role, team:u.team, token:session.token, case_id:caseId,
         channel: channel || "call", note: ("[MOVE_TO_X] " + (note||""))
       };
