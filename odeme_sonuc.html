@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoRM - Ödeme Sonucu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body { box-sizing: border-box; }
+    .font-heading { font-family: 'IBM Plex Mono', monospace; }
+    .font-body { font-family: 'Inter', sans-serif; }
+    .result-card { background:#18181b;border:1px solid #27272a;border-radius:8px;padding:48px 40px;max-width:640px;margin:0 auto; }
+    .status-header { text-align:center;margin-bottom:40px;padding-bottom:32px;border-bottom:1px solid #27272a; }
+    .status-icon { width:80px;height:80px;margin:0 auto 24px; }
+    .status-badge { display:inline-block;padding:8px 16px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px; }
+    .status-badge.success { background:rgba(134,239,172,.15);color:#86efac;border:1px solid rgba(134,239,172,.3); }
+    .status-badge.failure { background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3); }
+    .status-title { font-size:28px;font-weight:700;color:#e4e4e7;margin-bottom:12px;line-height:1.2;font-family:'IBM Plex Mono', monospace; }
+    .status-message { font-size:13px;color:#a1a1aa;line-height:1.6; }
+    .info-item { display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid #27272a; }
+    .info-item:last-child { border-bottom:none; }
+    .info-label { font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:700;flex-shrink:0;width:160px; }
+    .info-value { font-size:13px;color:#e4e4e7;font-weight:600;text-align:right;font-family:'IBM Plex Mono', monospace; }
+    .info-value.large { font-size:22px;color:#fafafa; }
+    .reference-box { background:#0f0f10;border:1px solid #27272a;border-radius:6px;padding:20px;text-align:center;margin:32px 0; }
+    .reference-label { font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#71717a;font-weight:700;margin-bottom:12px; }
+    .reference-code { font-size:16px;font-weight:700;color:#e4e4e7;font-family:'IBM Plex Mono', monospace;letter-spacing:1px;margin-bottom:12px;word-break:break-word; }
+    .copy-btn { display:inline-flex;align-items:center;gap:6px;background:#27272a;border:1px solid #3f3f46;color:#e4e4e7;padding:8px 14px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;cursor:pointer; }
+    .copy-btn:hover { background:#3f3f46;border-color:#52525b; }
+    .system-message-box { background:#0f0f10;border-left:3px solid #3b82f6;border-radius:4px;padding:16px 18px;margin-bottom:32px; }
+    .system-message-box.success { border-left-color:#86efac; }
+    .system-message-box.failure { border-left-color:#f87171; }
+    .system-message { font-size:11px;color:#d4d4d8;line-height:1.7;margin-bottom:8px; }
+    .system-message:last-child { margin-bottom:0; }
+    .btn { width:100%;padding:14px 24px;border-radius:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;transition:all .2s;text-align:center;border:1px solid; }
+    .btn-primary { background:#52525b;border-color:#71717a;color:#e4e4e7; }
+    .btn-primary:hover { background:#71717a;border-color:#a1a1aa; }
+    .btn-secondary { background:#27272a;border-color:#3f3f46;color:#e4e4e7; }
+    .btn-secondary:hover { background:#3f3f46;border-color:#52525b; }
+    @media (max-width:768px){
+      .result-card{padding:32px 24px;}
+      .status-title{font-size:22px;}
+      .info-item{flex-direction:column;gap:8px;}
+      .info-label{width:100%;}
+      .info-value{text-align:left;}
+    }
+  </style>
+</head>
+
+<body class="h-full font-body">
+  <div class="h-full w-full overflow-auto" style="background-color:#09090b;">
+    <header class="border-b" style="background-color:#18181b;border-color:#27272a;">
+      <div class="px-6 py-6 flex items-center justify-between">
+        <div class="w-32"></div>
+        <div class="flex flex-col items-center">
+          <div class="font-heading text-xl font-bold tracking-tight text-zinc-100 mb-1">CoRM</div>
+          <div class="text-xs text-zinc-500 tracking-wider">Tahsilat ve Ödeme Portalı</div>
+        </div>
+        <div class="w-32"></div>
+      </div>
+    </header>
+
+    <main class="py-12 px-6">
+      <div class="text-center mb-8">
+        <h1 class="font-heading text-2xl font-bold tracking-wide text-zinc-200 mb-2">ÖDEME SONUCU</h1>
+        <p class="text-sm text-zinc-500">İşlem durumu ve kayıt sonucu</p>
+      </div>
+
+      <div class="result-card">
+        <div class="status-header">
+          <div class="status-icon" id="status-icon"></div>
+          <div><span class="status-badge" id="status-badge">—</span></div>
+          <h2 class="status-title" id="status-title">—</h2>
+          <p class="status-message" id="status-message">—</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Durum</div>
+          <div class="info-value" id="status-val">—</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Dosya (case_id)</div>
+          <div class="info-value" id="case-id">—</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Ödenen Tutar</div>
+          <div class="info-value large" id="paid">—</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Kalan Borç (Borç Tutar)</div>
+          <div class="info-value" id="remaining">—</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Yöntem</div>
+          <div class="info-value" id="method">—</div>
+        </div>
+
+        <div class="reference-box">
+          <div class="reference-label">Referans (paymentId)</div>
+          <div class="reference-code" id="paymentId">—</div>
+          <button class="copy-btn" id="btnCopy" type="button">Kopyala</button>
+        </div>
+
+        <div class="system-message-box" id="sysBox">
+          <div class="system-message" id="sys1">—</div>
+          <div class="system-message" id="sys2">—</div>
+          <div class="system-message" id="sysErr" style="display:none;color:#f87171;">—</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button class="btn btn-primary" id="btnBack" type="button">Ödeme Sayfasına Dön</button>
+          <button class="btn btn-secondary" id="btnClose" type="button">Kapat</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+function qs(name){
+  const u = new URL(window.location.href);
+  return u.searchParams.get(name) || "";
+}
+function moneyTRY(v){
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return n.toLocaleString("tr-TR", {minimumFractionDigits:2, maximumFractionDigits:2}) + " ₺";
+}
+function setSuccess(){
+  document.getElementById("status-icon").innerHTML = `
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="38" stroke="#86efac" stroke-width="3"/>
+      <path d="M25 40L35 50L55 30" stroke="#86efac" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  const b = document.getElementById("status-badge");
+  b.className = "status-badge success";
+  b.textContent = "Başarılı";
+  document.getElementById("status-title").textContent = "Ödeme Başarıyla Alındı";
+  document.getElementById("status-message").textContent = "Ödemeniz sisteme işlendi. Borç tutarı güncellendi.";
+  const sys = document.getElementById("sysBox");
+  sys.className = "system-message-box success";
+  document.getElementById("sys1").textContent = "Ödeme Google Sheet üzerinde kaydedildi.";
+  document.getElementById("sys2").textContent = "Borç Tutar alanı düşürüldü (kısmi ödeme desteklenir).";
+}
+function setFailure(){
+  document.getElementById("status-icon").innerHTML = `
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="38" stroke="#f87171" stroke-width="3"/>
+      <path d="M30 30L50 50M50 30L30 50" stroke="#f87171" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  const b = document.getElementById("status-badge");
+  b.className = "status-badge failure";
+  b.textContent = "Başarısız";
+  document.getElementById("status-title").textContent = "Ödeme Tamamlanamadı";
+  document.getElementById("status-message").textContent = "İşlem sırasında bir sorun oluştu. Lütfen tekrar deneyin.";
+  const sys = document.getElementById("sysBox");
+  sys.className = "system-message-box failure";
+  document.getElementById("sys1").textContent = "Bu işlem başarısız olarak kayıt altına alındı.";
+  document.getElementById("sys2").textContent = "Dosya borç bilgisi değişmedi.";
+}
+
+(function init(){
+  const status = (qs("status") || "").toLowerCase();
+  const caseId = qs("case_id");
+  const paid = qs("paid");
+  const remaining = qs("remaining");
+  const paymentId = qs("paymentId");
+  const method = qs("method") || "iyzico";
+  const error = qs("error") || qs("reason");
+
+  document.getElementById("status-val").textContent = status || "—";
+  document.getElementById("case-id").textContent = caseId || "—";
+  document.getElementById("paid").textContent = paid ? moneyTRY(paid) : "—";
+  document.getElementById("remaining").textContent = remaining ? moneyTRY(remaining) : "—";
+  document.getElementById("paymentId").textContent = paymentId || "—";
+  document.getElementById("method").textContent = method;
+
+  if (status === "success") setSuccess();
+  else setFailure();
+
+  if (error){
+    const e = document.getElementById("sysErr");
+    e.style.display = "block";
+    e.textContent = "Hata: " + error;
+  }
+
+  document.getElementById("btnCopy").onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(paymentId || "");
+    } catch(e){}
+  };
+
+  document.getElementById("btnBack").onclick = ()=>{
+    // best effort back: needs token & case_id in url history
+    history.length > 1 ? history.back() : (window.location.href = "/odeme.html");
+  };
+  document.getElementById("btnClose").onclick = ()=> window.close();
+})();
+</script>
+</body>
+</html>
