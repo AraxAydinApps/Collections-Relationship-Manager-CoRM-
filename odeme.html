@@ -200,25 +200,12 @@
       </div>
 
       <div id="topAlert"></div>
-
       <div class="section-divider"></div>
 
-      <div class="info-row">
-        <div class="info-label">Firma/Kişi</div>
-        <div id="company-name" class="info-value">—</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Hesap Kodu</div>
-        <div id="account-code" class="info-value">—</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Dosya Numarası</div>
-        <div id="file-number" class="info-value">—</div>
-      </div>
-      <div class="info-row">
-        <div class="info-label">Sorumlu</div>
-        <div id="responsible" class="info-value">—</div>
-      </div>
+      <div class="info-row"><div class="info-label">Firma/Kişi</div><div id="company-name" class="info-value">—</div></div>
+      <div class="info-row"><div class="info-label">Hesap Kodu</div><div id="account-code" class="info-value">—</div></div>
+      <div class="info-row"><div class="info-label">Dosya Numarası</div><div id="file-number" class="info-value">—</div></div>
+      <div class="info-row"><div class="info-label">Sorumlu</div><div id="responsible" class="info-value">—</div></div>
 
       <div class="section-divider"></div>
 
@@ -255,7 +242,7 @@
               </svg>
             </div>
             <div class="payment-method-title">Kredi Kartı</div>
-            <div class="payment-method-description">Link ile ödeme</div>
+            <div class="payment-method-description">Iyzico ile ödeme</div>
           </div>
 
           <div class="payment-method-card" data-method="online">
@@ -266,7 +253,7 @@
               </svg>
             </div>
             <div class="payment-method-title">Online Ödeme</div>
-            <div class="payment-method-description">Hızlı yönlendirme</div>
+            <div class="payment-method-description">Iyzico yönlendirme</div>
           </div>
         </div>
       </div>
@@ -275,36 +262,24 @@
       <div class="payment-details" id="details-wire">
         <div class="detail-group">
           <div class="detail-label">Banka Adı</div>
-          <div class="detail-value" id="wire_bank_name">A bankası</div>
+          <div class="detail-value" id="wire_bank_name">—</div>
         </div>
 
         <div class="detail-group">
           <div class="detail-label">IBAN</div>
-          <div class="detail-value" id="wire_iban">TR15 0006 4000 0011 1680 4165 84</div>
-          <button class="copy-button" id="btnCopyIban" type="button">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
-            Kopyala
-          </button>
+          <div class="detail-value" id="wire_iban">—</div>
+          <button class="copy-button" id="btnCopyIban" type="button">Kopyala</button>
         </div>
 
         <div class="detail-group">
           <div class="detail-label">Alıcı Ünvan</div>
-          <div class="detail-value" id="wire_receiver">A firmasi</div>
+          <div class="detail-value" id="wire_receiver">—</div>
         </div>
 
         <div class="detail-group">
           <div class="detail-label">Açıklama (Zorunlu)</div>
           <div class="detail-value" id="wire_desc">—</div>
-          <button class="copy-button" id="btnCopyDesc" type="button">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 1H3C2.44772 1 2 1.44772 2 2V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              <rect x="4" y="4" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
-            Kopyala
-          </button>
+          <button class="copy-button" id="btnCopyDesc" type="button">Kopyala</button>
         </div>
       </div>
 
@@ -314,11 +289,11 @@
           <div class="detail-label">Bilgi</div>
           <div style="padding:16px;background:rgba(234,179,8,.1);border-radius:4px;border-left:3px solid #fde047;">
             <p style="font-size:11px;color:#fde047;line-height:1.5;margin:0;">
-              Güvenli ödeme bağlantısı size özel olarak hazırlanır. Eğer sistemde bir ödeme linki varsa aşağıdaki buton ile açılır.
+              Kredi kartı ödemesi Iyzico üzerinden güvenli şekilde yapılır. Devam etmek için aşağıdaki butona tıklayın.
             </p>
           </div>
           <div class="mt-3">
-            <button class="btn-secondary" id="btnOpenPaymentLink" type="button" disabled>ÖDEME LİNKİNİ AÇ</button>
+            <button class="btn-secondary" id="btnStartCard" type="button" disabled>IYZICO İLE ÖDE</button>
           </div>
         </div>
       </div>
@@ -329,18 +304,18 @@
           <div class="detail-label">Online Ödeme</div>
           <div style="padding:16px;background:rgba(134,239,172,.1);border-radius:4px;border-left:3px solid #86efac;text-align:center;">
             <p style="font-size:11px;color:#86efac;margin:0 0 12px 0;line-height:1.5;">
-              Güvenli ödeme sayfasına yönlendirileceksiniz.
+              Güvenli Iyzico ödeme sayfasına yönlendirileceksiniz.
             </p>
             <button class="btn-secondary" id="btnGoOnline" type="button" disabled>ÖDEME SAYFASINA GİT →</button>
           </div>
         </div>
       </div>
 
-      <button class="btn-complete" id="btn-complete" disabled type="button">ÖDEMEYİ TAMAMLA</button>
+      <button class="btn-complete" id="btn-complete" disabled type="button">İŞLEMİ TAMAMLA</button>
 
       <div class="btn-subtitle">
-        Ödeme alındığında dosya otomatik güncellenir.<br/>
-        Dekont göndermenize gerek yoktur.
+        Kredi kartı/online ödemelerde dosya otomatik güncellenir.<br/>
+        Havale/EFT’de açıklamayı doğru yazmanız gerekmektedir.
       </div>
     </div>
 
@@ -413,14 +388,7 @@
 </div>
 
 <script>
-/** =========================
- *  CONFIG (from GitHub)
- *  ========================= */
 const WEBAPP_URL = (window.CORM_WEBAPP_URL || "/api/corm");
-
-/** =========================
- *  Helpers
- *  ========================= */
 const $ = (id) => document.getElementById(id);
 
 function qs(name){
@@ -432,7 +400,6 @@ function fmtDateTR(iso){
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) {
-    // maybe already yyyy-mm-dd
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
       const p = String(iso).split("-");
       return `${p[2]}.${p[1]}.${p[0]}`;
@@ -483,8 +450,7 @@ async function apiPost(payload){
 }
 
 function setTopAlert(html){
-  const box = $("topAlert");
-  box.innerHTML = html || "";
+  $("topAlert").innerHTML = html || "";
 }
 
 function escapeHtml(str){
@@ -496,15 +462,9 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-/** =========================
- *  State
- *  ========================= */
 let portalData = null;
 let selectedMethod = null;
 
-/** =========================
- *  UI: Payment method
- *  ========================= */
 function applyPaymentMethodUI(){
   document.querySelectorAll(".payment-method-card").forEach(c => c.classList.remove("selected"));
   document.querySelectorAll(".payment-details").forEach(p => p.classList.remove("show"));
@@ -515,15 +475,12 @@ function applyPaymentMethodUI(){
     const panel = $("details-" + selectedMethod);
     if (panel) panel.classList.add("show");
 
-    const btn = $("btn-complete");
-    if (btn) btn.disabled = false;
+    $("btn-complete").disabled = false;
   }
 }
 
 function setStatusBadge({isPaid, dueDate}){
   const badge = $("statusBadge");
-  if (!badge) return;
-
   badge.classList.remove("due-today","overdue","wait","paid");
 
   if (isPaid){
@@ -532,8 +489,7 @@ function setStatusBadge({isPaid, dueDate}){
     return;
   }
 
-  const today = new Date();
-  const todayIso = today.toISOString().slice(0,10);
+  const todayIso = new Date().toISOString().slice(0,10);
   const due = String(dueDate || "").slice(0,10);
 
   if (!due){
@@ -569,9 +525,8 @@ function setRightsUI({remaining, limit, maxDays}){
   const rem = num(remaining);
   const md = Math.max(0, parseInt(maxDays || 0, 10) || 0);
 
-  if (hint) hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${md} gün`;
+  hint.textContent = `Seçilebilecek tarih: Bugünden itibaren en fazla ${md} gün`;
 
-  // date constraints
   const today = new Date();
   const maxDate = new Date();
   maxDate.setDate(today.getDate() + md);
@@ -597,15 +552,11 @@ function setRightsUI({remaining, limit, maxDays}){
     reasonSel.disabled = false;
     desc.disabled = false;
     warningsDiv.innerHTML = '';
-    btnPostpone.disabled = true; // until valid
+    btnPostpone.disabled = true;
   }
 }
 
-/** =========================
- *  Load portal
- *  ========================= */
 async function loadPortal(){
-  // allow token OR payment_token
   const token = qs("token") || qs("payment_token");
   const caseId = qs("case_id");
 
@@ -619,83 +570,49 @@ async function loadPortal(){
 
   portalData = data;
 
-  // Top date
   $("todayTop").textContent = data?.portal?.today ? fmtDateTR(data.portal.today) : fmtDateTR(new Date().toISOString());
 
-  // Case mapping (backend should already normalize; fallback to Turkish keys if backend returns raw)
   const c = data.case || {};
 
-  // These may come normalized:
-  const accountName = c.account_name || c["Hesap Adı"] || "—";
-  const accountCode = c.account_code || c["Hesap Kodu"] || "—";
-  const caseNo      = c.case_id || c["Dosya Numarası"] || qs("case_id") || "—";
-  const ownerName   = c.owner_name || c.owner_user_id || c["Sorumlu"] || "—";
+  const accountName = c.account_name || "—";
+  const accountCode = c.account_code || "—";
+  const caseNo      = c.case_id || caseId || "—";
+  const ownerName   = c.owner_name || c.owner_user_id || "—";
 
   $("company-name").textContent = accountName;
   $("account-code").textContent = accountCode;
   $("file-number").textContent  = caseNo;
   $("responsible").textContent  = ownerName;
 
-  // Amount: prefer backend computed
-  // (If your backend uses promise_amount or overdue/balance, it should send amount_to_pay)
-  const amountToPay =
-    (c.amount_to_pay ?? c.promise_amount ?? c["Son Tahsilat Tutarı"] ?? c["Bakiye"] ?? 0);
-
+  const amountToPay = (c.amount_to_pay ?? 0);
   $("amountValue").textContent = moneyTRY(amountToPay);
 
-  // Description text
-  const lastPromise = c.last_promise_date || c["Son Tahsilat Tarihi"];
+  const lastPromise = c.last_promise_date || "";
   $("amountDesc").textContent = lastPromise
     ? `Bu tutar sistemde kayıtlı son tahsilat sözüne göre hesaplanır. (Son söz: ${escapeHtml(String(lastPromise))})`
     : `Bu tutar sistemde kayıtlı son duruma göre hesaplanır.`;
 
-  // Status
   const isPaid = (c.is_paid === true || String(c.is_paid||"").toUpperCase() === "TRUE");
   const dueDate = c.due_date || null;
   setStatusBadge({ isPaid, dueDate });
 
-  // Wire details: from backend portal or fallback to constants (if backend sends)
   const p = data.portal || {};
-  const bankName = p.bank_name || "—";
-  const iban = p.company_iban || p.iban || "—";
-  const receiver = p.company_receiver || p.receiver || "—";
-
-  $("wire_bank_name").textContent = bankName;
-  $("wire_iban").textContent = iban;
-  $("wire_receiver").textContent = receiver;
+  $("wire_bank_name").textContent = p.bank_name || "—";
+  $("wire_iban").textContent = p.company_iban || "—";
+  $("wire_receiver").textContent = p.company_receiver || "—";
 
   const wireDesc = `${accountCode} – ${caseNo}`;
   $("wire_desc").textContent = wireDesc;
 
-  $("btnCopyIban").onclick = ()=> copyToClipboard(iban);
+  $("btnCopyIban").onclick = ()=> copyToClipboard(p.company_iban || "");
   $("btnCopyDesc").onclick = ()=> copyToClipboard(wireDesc);
 
-  // Payment link (for card/online)
-  const payLink = c.payment_link || p.payment_link || "";
-  const btnPayLink = $("btnOpenPaymentLink");
-  const btnGoOnline = $("btnGoOnline");
-
-  if (payLink){
-    btnPayLink.disabled = false;
-    btnGoOnline.disabled = false;
-
-    btnPayLink.onclick = ()=> window.location.href = payLink;
-    btnGoOnline.onclick = ()=> window.location.href = payLink;
-  } else {
-    btnPayLink.disabled = true;
-    btnGoOnline.disabled = true;
-  }
-
-  // Rights / postpone limits
-  // backend should return remaining_rights, postpone_limit, max_postpone_days
   const postponeLimit = (p.postpone_limit ?? c.postpone_limit ?? 0);
   const postponeUsed  = (p.postpone_used ?? c.postpone_used ?? 0);
   const remaining = Math.max(0, num(postponeLimit) - num(postponeUsed));
-  const maxDays = (p.max_postpone_days ?? p.postpone_max_days ?? 7);
-
+  const maxDays = (p.max_postpone_days ?? 7);
   setRightsUI({ remaining, limit: postponeLimit, maxDays });
 
-  // Expired / paid locks
   const expired = !!p.expired;
   if (expired){
     setTopAlert('<div class="alert-box info">Bilgi: Bu ödeme linkinin geçerlilik süresi dolmuş olabilir. Lütfen sorumlu kişiyle iletişime geçin.</div>');
@@ -703,7 +620,14 @@ async function loadPortal(){
     setTopAlert("");
   }
 
-  // Lock buttons
+  // Enable Iyzico buttons when not expired and not already paid
+  const canPay = !expired && !isPaid;
+  $("btnStartCard").disabled = !canPay;
+  $("btnGoOnline").disabled = !canPay;
+
+  $("btnStartCard").onclick = ()=> startIyzicoFlow();
+  $("btnGoOnline").onclick = ()=> startIyzicoFlow();
+
   if (expired || isPaid){
     $("btn-complete").disabled = true;
     $("btn-postpone").disabled = true;
@@ -713,71 +637,87 @@ async function loadPortal(){
     }
   }
 
-  // Re-validate postpone form
   validatePostponeForm();
 }
 
-/** =========================
- *  Clipboard
- *  ========================= */
 function copyToClipboard(text){
   navigator.clipboard.writeText(String(text||""))
     .then(()=>toast("ok","KOPYALANDI"))
     .catch(()=>toast("err","KOPYALAMA BAŞARISIZ"));
 }
 
-/** =========================
- *  Payment confirm
- *  ========================= */
+/** ✅ Iyzico start */
+async function startIyzicoFlow(){
+  try{
+    if (!portalData) throw new Error("Portal data not loaded");
+    const token = qs("token") || qs("payment_token");
+    const caseId = qs("case_id");
+
+    const btn = (selectedMethod === "online") ? $("btnGoOnline") : $("btnStartCard");
+    const old = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "YÖNLENDİRİLİYOR...";
+
+    const resp = await apiPost({ action:"iyzicoInitPwi", token, case_id: caseId });
+    if (!resp.ok) throw new Error(resp.error || "iyzicoInitPwi failed");
+
+    const url = resp.payWithIyzicoPageUrl;
+    if (!url) throw new Error("payWithIyzicoPageUrl missing");
+    window.location.href = url;
+
+  } catch(e){
+    toast("err", "HATA: " + (e.message || e));
+    $("btnStartCard").disabled = false;
+    $("btnGoOnline").disabled = false;
+    $("btnStartCard").textContent = "IYZICO İLE ÖDE";
+    $("btnGoOnline").textContent = "ÖDEME SAYFASINA GİT →";
+  }
+}
+
+/** ✅ Complete button behavior:
+ * - wire: just "notice" (does not reduce debt)
+ * - card/online: starts iyzico
+ */
 async function completePayment(){
   try{
     if (!portalData) throw new Error("Portal data not loaded");
     if (!selectedMethod) throw new Error("Ödeme yöntemi seçiniz");
 
+    if (selectedMethod === "card" || selectedMethod === "online"){
+      return startIyzicoFlow();
+    }
+
+    // wire
     const token = qs("token") || qs("payment_token");
     const caseId = qs("case_id");
-
-    const amount =
-      (portalData.case?.amount_to_pay ?? portalData.case?.promise_amount ?? portalData.case?.["Bakiye"] ?? 0);
+    const amount = (portalData.case?.amount_to_pay ?? 0);
 
     const btn = $("btn-complete");
     btn.disabled = true;
     const old = btn.textContent;
-    btn.textContent = "İŞLENİYOR...";
+    btn.textContent = "KAYDEDİLİYOR...";
 
     const resp = await apiPost({
       action: "portalConfirmPayment",
       token,
       case_id: caseId,
-      method: selectedMethod,
+      method: "wire",
       amount
     });
 
     if (!resp.ok) throw new Error(resp.error || "portalConfirmPayment failed");
 
-    toast("ok","ÖDEME KAYDI ALINDI");
-    btn.textContent = "ÖDENDİ";
-    $("btn-postpone").disabled = true;
-    $("statusBadge").classList.remove("due-today","overdue","wait");
-    $("statusBadge").classList.add("paid");
-    $("statusBadge").textContent = "ÖDENDİ";
-
+    toast("ok","BİLDİRİM ALINDI");
+    btn.textContent = "BİLDİRİM ALINDI";
   } catch(e){
     toast("err", "HATA: " + (e.message || e));
     const btn = $("btn-complete");
     btn.disabled = false;
-    btn.textContent = "ÖDEMEYİ TAMAMLA";
+    btn.textContent = "İŞLEMİ TAMAMLA";
   }
 }
 
-/** =========================
- *  Postpone
- *  ========================= */
 function validatePostponeForm(){
-  const token = qs("token") || qs("payment_token");
-  const caseId = qs("case_id");
-  if (!token || !caseId) return;
-
   const remaining =
     portalData?.portal?.remaining_rights ??
     Math.max(0, num(portalData?.portal?.postpone_limit ?? portalData?.case?.postpone_limit ?? 0) - num(portalData?.portal?.postpone_used ?? portalData?.case?.postpone_used ?? 0));
@@ -805,10 +745,8 @@ async function submitPostponeRequest(){
 
     const btn = $("btn-postpone");
     btn.disabled = true;
-    const old = btn.textContent;
     btn.textContent = "GÖNDERİLİYOR...";
 
-    // Backend applies real rules: postpone_limit + max_postpone_days etc.
     const resp = await apiPost({
       action: "portalPostpone",
       token,
@@ -822,21 +760,17 @@ async function submitPostponeRequest(){
 
     toast("ok","ERTELEME KAYDEDİLDİ");
 
-    // Update rights from response if present
-    // Expected: remaining_rights, postpone_limit, postpone_used, max_postpone_days
     if (!portalData.portal) portalData.portal = {};
     portalData.portal.postpone_used = resp.postpone_used ?? portalData.portal.postpone_used;
     portalData.portal.postpone_limit = resp.postpone_limit ?? portalData.portal.postpone_limit;
     portalData.portal.remaining_rights = resp.remaining_rights ?? portalData.portal.remaining_rights;
-    portalData.portal.max_postpone_days = portalData.portal.max_postpone_days ?? resp.max_postpone_days;
 
-    const limit = resp.postpone_limit ?? portalData.portal.postpone_limit ?? portalData.case?.postpone_limit ?? 0;
+    const limit = resp.postpone_limit ?? portalData.portal.postpone_limit ?? 0;
     const remaining = resp.remaining_rights ?? portalData.portal.remaining_rights ?? 0;
-    const maxDays = resp.max_postpone_days ?? portalData.portal.max_postpone_days ?? 7;
+    const maxDays = portalData.portal.max_postpone_days ?? 7;
 
     setRightsUI({ remaining, limit, maxDays });
 
-    // clear form
     $("postpone-date").value = "";
     $("postpone-reason").value = "";
     $("postpone-description").value = "";
@@ -851,9 +785,6 @@ async function submitPostponeRequest(){
   }
 }
 
-/** =========================
- *  Events
- *  ========================= */
 document.querySelectorAll(".payment-method-card").forEach(card=>{
   card.addEventListener("click", ()=>{
     selectedMethod = card.getAttribute("data-method");
@@ -863,14 +794,10 @@ document.querySelectorAll(".payment-method-card").forEach(card=>{
 
 $("btn-complete").addEventListener("click", completePayment);
 $("btn-postpone").addEventListener("click", submitPostponeRequest);
-
 $("postpone-date").addEventListener("change", validatePostponeForm);
 $("postpone-reason").addEventListener("change", validatePostponeForm);
 $("postpone-description").addEventListener("input", validatePostponeForm);
 
-/** =========================
- *  Init
- *  ========================= */
 loadPortal().catch(e=>{
   setTopAlert('<div class="alert-box danger">Hata: ' + escapeHtml(e.message || String(e)) + '</div>');
 });
@@ -878,4 +805,3 @@ loadPortal().catch(e=>{
 
 </body>
 </html>
-
