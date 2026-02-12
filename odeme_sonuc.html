@@ -40,6 +40,8 @@
     .btn-primary:hover { background:#71717a;border-color:#a1a1aa; }
     .btn-secondary { background:#27272a;border-color:#3f3f46;color:#e4e4e7; }
     .btn-secondary:hover { background:#3f3f46;border-color:#52525b; }
+    .btn-danger { background:#3b1d1d;border-color:#7f1d1d;color:#fecaca; }
+    .btn-danger:hover { background:#7f1d1d;border-color:#991b1b;color:#fff; }
     @media (max-width:768px){
       .result-card{padding:32px 24px;}
       .status-title{font-size:22px;}
@@ -93,7 +95,7 @@
         </div>
 
         <div class="info-item">
-          <div class="info-label">Kalan Borç (Borç Tutar)</div>
+          <div class="info-label">Kalan Borç (Bakiye)</div>
           <div class="info-value" id="remaining">—</div>
         </div>
 
@@ -115,14 +117,23 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- ✅ PDF button only shown on success -->
+          <button class="btn btn-secondary" id="btnPdf" type="button" style="display:none;">Makbuzu İndir (PDF)</button>
+
           <button class="btn btn-primary" id="btnBack" type="button">Ödeme Sayfasına Dön</button>
-          <button class="btn btn-secondary" id="btnClose" type="button">Kapat</button>
+          <button class="btn btn-danger" id="btnClose" type="button">Kapat</button>
         </div>
       </div>
     </main>
   </div>
 
 <script>
+/**
+ * ✅ SET THIS:
+ * Google Apps Script WebApp URL (same endpoint you use for login/listCases/etc)
+ */
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyl-N86X-NWAzt7fPjX-BUl_DXw09LvGAvuBQDryKcW18G-bKr8Zrhpd0YuQGmUJwVW/exec";
+
 function qs(name){
   const u = new URL(window.location.href);
   return u.searchParams.get(name) || "";
@@ -142,11 +153,11 @@ function setSuccess(){
   b.className = "status-badge success";
   b.textContent = "Başarılı";
   document.getElementById("status-title").textContent = "Ödeme Başarıyla Alındı";
-  document.getElementById("status-message").textContent = "Ödemeniz sisteme işlendi. Borç tutarı güncellendi.";
+  document.getElementById("status-message").textContent = "Ödemeniz sisteme işlendi. Bakiye güncellendi.";
   const sys = document.getElementById("sysBox");
   sys.className = "system-message-box success";
   document.getElementById("sys1").textContent = "Ödeme Google Sheet üzerinde kaydedildi.";
-  document.getElementById("sys2").textContent = "Borç Tutar alanı düşürüldü (kısmi ödeme desteklenir).";
+  document.getElementById("sys2").textContent = "Bakiye alanı düşürüldü (kısmi ödeme desteklenir).";
 }
 function setFailure(){
   document.getElementById("status-icon").innerHTML = `
@@ -165,6 +176,39 @@ function setFailure(){
   document.getElementById("sys2").textContent = "Dosya borç bilgisi değişmedi.";
 }
 
+async function downloadPdfReceipt({caseId, paymentId, paid, remaining, method}){
+  if (!BACKEND_URL || BACKEND_URL.includes("PASTE_YOUR_WEBAPP_URL_HERE")) {
+    throw new Error("BACKEND_URL tanımlı değil. odeme_sonuc.html içinde BACKEND_URL alanına WebApp URL yapıştırın.");
+  }
+  if (!caseId) throw new Error("case_id yok");
+  if (!paymentId) throw new Error("paymentId yok");
+
+  const payload = {
+    action: "generateReceiptPdf",
+    case_id: caseId,
+    paymentId: paymentId,
+    paid: paid || "",
+    remaining: remaining || "",
+    method: method || "iyzico"
+  };
+
+  const res = await fetch(BACKEND_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json().catch(()=>null);
+  if (!json || !json.ok) {
+    throw new Error((json && (json.error || json.message)) ? (json.error || json.message) : "PDF oluşturulamadı");
+  }
+
+  if (!json.url) throw new Error("PDF url dönmedi");
+
+  // open download in new tab
+  window.open(json.url, "_blank", "noopener,noreferrer");
+}
+
 (function init(){
   const status = (qs("status") || "").toLowerCase();
   const caseId = qs("case_id");
@@ -181,8 +225,13 @@ function setFailure(){
   document.getElementById("paymentId").textContent = paymentId || "—";
   document.getElementById("method").textContent = method;
 
-  if (status === "success") setSuccess();
-  else setFailure();
+  if (status === "success") {
+    setSuccess();
+    // ✅ show PDF button
+    document.getElementById("btnPdf").style.display = "block";
+  } else {
+    setFailure();
+  }
 
   if (error){
     const e = document.getElementById("sysErr");
@@ -191,13 +240,28 @@ function setFailure(){
   }
 
   document.getElementById("btnCopy").onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(paymentId || ""); } catch(e){}
+  };
+
+  document.getElementById("btnPdf").onclick = async ()=>{
+    const btn = document.getElementById("btnPdf");
+    const sysErr = document.getElementById("sysErr");
     try{
-      await navigator.clipboard.writeText(paymentId || "");
-    } catch(e){}
+      btn.disabled = true;
+      btn.textContent = "PDF hazırlanıyor...";
+      sysErr.style.display = "none";
+      await downloadPdfReceipt({caseId, paymentId, paid, remaining, method});
+      btn.textContent = "Makbuzu İndir (PDF)";
+    } catch(err){
+      sysErr.style.display = "block";
+      sysErr.textContent = "PDF Hatası: " + String(err && err.message ? err.message : err);
+      btn.textContent = "Makbuzu İndir (PDF)";
+    } finally {
+      btn.disabled = false;
+    }
   };
 
   document.getElementById("btnBack").onclick = ()=>{
-    // best effort back: needs token & case_id in url history
     history.length > 1 ? history.back() : (window.location.href = "/odeme.html");
   };
   document.getElementById("btnClose").onclick = ()=> window.close();
