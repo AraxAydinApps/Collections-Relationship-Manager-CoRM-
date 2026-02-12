@@ -42,6 +42,7 @@
     .btn-secondary:hover { background:#3f3f46;border-color:#52525b; }
     .btn-danger { background:#3b1d1d;border-color:#7f1d1d;color:#fecaca; }
     .btn-danger:hover { background:#7f1d1d;border-color:#991b1b;color:#fff; }
+    .btn[disabled]{ opacity:.6; cursor:not-allowed; }
     @media (max-width:768px){
       .result-card{padding:32px 24px;}
       .status-title{font-size:22px;}
@@ -108,6 +109,7 @@
           <div class="reference-label">Referans (paymentId)</div>
           <div class="reference-code" id="paymentId">—</div>
           <button class="copy-btn" id="btnCopy" type="button">Kopyala</button>
+          <div class="text-[10px] text-zinc-500 mt-2" id="copyHint" style="display:none;">Kopyalandı ✅</div>
         </div>
 
         <div class="system-message-box" id="sysBox">
@@ -122,6 +124,10 @@
 
           <button class="btn btn-primary" id="btnBack" type="button">Ödeme Sayfasına Dön</button>
           <button class="btn btn-danger" id="btnClose" type="button">Kapat</button>
+
+          <div class="text-[10px] text-zinc-500 text-center" id="closeHint" style="display:none;">
+            Bu sekme otomatik kapanamayabilir. Tarayıcı izin vermediyse sekmeyi manuel kapatabilirsiniz.
+          </div>
         </div>
       </div>
     </main>
@@ -134,15 +140,54 @@
  */
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyl-N86X-NWAzt7fPjX-BUl_DXw09LvGAvuBQDryKcW18G-bKr8Zrhpd0YuQGmUJwVW/exec";
 
+/** optional: your payment page path (same domain) */
+const PAYMENT_PAGE_PATH = "/odeme.html";
+
 function qs(name){
   const u = new URL(window.location.href);
   return u.searchParams.get(name) || "";
 }
+
+function normalizeMoneyToNumber(v){
+  // supports: "4999.00", "4.999,00", "4,999.00", "4999", etc.
+  const s = String(v || "").trim();
+  if (!s) return NaN;
+
+  // keep digits, dot, comma, minus
+  const cleaned = s.replace(/[^\d.,-]/g, "");
+  if (!cleaned) return NaN;
+
+  // if both separators exist, assume last separator is decimal
+  const lastDot = cleaned.lastIndexOf(".");
+  const lastComma = cleaned.lastIndexOf(",");
+
+  let normalized = cleaned;
+  if (lastDot !== -1 && lastComma !== -1) {
+    if (lastDot > lastComma) {
+      // dot decimal -> remove commas
+      normalized = cleaned.replace(/,/g, "");
+    } else {
+      // comma decimal -> remove dots, replace comma with dot
+      normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
+    }
+  } else if (lastComma !== -1 && lastDot === -1) {
+    // only comma -> treat as decimal
+    normalized = cleaned.replace(/,/g, ".");
+  } else {
+    // only dot or none -> ok
+    normalized = cleaned;
+  }
+
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : NaN;
+}
+
 function moneyTRY(v){
-  const n = Number(v);
+  const n = normalizeMoneyToNumber(v);
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString("tr-TR", {minimumFractionDigits:2, maximumFractionDigits:2}) + " ₺";
 }
+
 function setSuccess(){
   document.getElementById("status-icon").innerHTML = `
     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -159,6 +204,7 @@ function setSuccess(){
   document.getElementById("sys1").textContent = "Ödeme Google Sheet üzerinde kaydedildi.";
   document.getElementById("sys2").textContent = "Bakiye alanı düşürüldü (kısmi ödeme desteklenir).";
 }
+
 function setFailure(){
   document.getElementById("status-icon").innerHTML = `
     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -178,9 +224,8 @@ function setFailure(){
 
 /**
  * ✅ NO-CORS PDF DOWNLOAD:
- * Do NOT use fetch() to Apps Script (CORS causes "Failed to fetch").
- * Open the WebApp URL in a new tab with query params.
- * Backend should handle: action=generateReceiptPdf (via doGet) and return PDF / redirect.
+ * do NOT use fetch() (CORS)
+ * open WebApp URL in new tab with query params
  */
 function openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method}){
   if (!BACKEND_URL || BACKEND_URL.includes("PASTE_YOUR_WEBAPP_URL_HERE")) {
@@ -201,9 +246,28 @@ function openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method}){
   window.open(u.toString(), "_blank", "noopener,noreferrer");
 }
 
+function buildBackUrl({caseId, token}){
+  // if token exists, return directly to same debtor portal
+  if (token && caseId){
+    const u = new URL(PAYMENT_PAGE_PATH, window.location.origin);
+    u.searchParams.set("case_id", caseId);
+    u.searchParams.set("token", token);
+    return u.toString();
+  }
+  // fallback: payment page root
+  return new URL(PAYMENT_PAGE_PATH, window.location.origin).toString();
+}
+
+function showErr(msg){
+  const e = document.getElementById("sysErr");
+  e.style.display = "block";
+  e.textContent = msg;
+}
+
 (function init(){
   const status = (qs("status") || "").toLowerCase();
   const caseId = qs("case_id");
+  const token = qs("token"); // ✅ if you pass it from backend redirect, back button becomes perfect
   const paid = qs("paid");
   const remaining = qs("remaining");
   const paymentId = qs("paymentId");
@@ -219,37 +283,43 @@ function openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method}){
 
   if (status === "success") {
     setSuccess();
-    // ✅ show PDF button
-    document.getElementById("btnPdf").style.display = "block";
+    // ✅ show PDF button only if we have identifiers
+    if (caseId && paymentId){
+      document.getElementById("btnPdf").style.display = "block";
+    } else {
+      showErr("PDF için gerekli bilgiler eksik: case_id veya paymentId yok.");
+    }
   } else {
     setFailure();
   }
 
   if (error){
-    const e = document.getElementById("sysErr");
-    e.style.display = "block";
-    e.textContent = "Hata: " + error;
+    showErr("Hata: " + error);
   }
 
   document.getElementById("btnCopy").onclick = async ()=>{
-    try{ await navigator.clipboard.writeText(paymentId || ""); } catch(e){}
+    const hint = document.getElementById("copyHint");
+    hint.style.display = "none";
+    try{
+      await navigator.clipboard.writeText(paymentId || "");
+      hint.style.display = "block";
+      setTimeout(()=> hint.style.display = "none", 1200);
+    } catch(e){
+      showErr("Kopyalama başarısız. Tarayıcı izin vermiyor olabilir.");
+    }
   };
 
-  document.getElementById("btnPdf").onclick = async ()=>{
+  document.getElementById("btnPdf").onclick = ()=>{
     const btn = document.getElementById("btnPdf");
-    const sysErr = document.getElementById("sysErr");
     try{
       btn.disabled = true;
       btn.textContent = "PDF hazırlanıyor...";
-      sysErr.style.display = "none";
 
-      // ✅ No fetch, no CORS
       openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method});
 
       btn.textContent = "Makbuzu İndir (PDF)";
     } catch(err){
-      sysErr.style.display = "block";
-      sysErr.textContent = "PDF Hatası: " + String(err && err.message ? err.message : err);
+      showErr("PDF Hatası: " + String(err && err.message ? err.message : err));
       btn.textContent = "Makbuzu İndir (PDF)";
     } finally {
       btn.disabled = false;
@@ -257,9 +327,28 @@ function openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method}){
   };
 
   document.getElementById("btnBack").onclick = ()=>{
-    history.length > 1 ? history.back() : (window.location.href = "/odeme.html");
+    // ✅ better back behavior:
+    // if token exists -> go directly to same case portal
+    // else -> use history back if possible, otherwise open /odeme.html
+    const direct = buildBackUrl({caseId, token});
+    if (token && caseId) {
+      window.location.href = direct;
+      return;
+    }
+    if (history.length > 1) history.back();
+    else window.location.href = direct;
   };
-  document.getElementById("btnClose").onclick = ()=> window.close();
+
+  document.getElementById("btnClose").onclick = ()=>{
+    const before = window.closed;
+    window.close();
+    // if browser blocks close, show hint
+    setTimeout(()=>{
+      if (!before && !window.closed) {
+        document.getElementById("closeHint").style.display = "block";
+      }
+    }, 250);
+  };
 })();
 </script>
 </body>
