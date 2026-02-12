@@ -176,37 +176,29 @@ function setFailure(){
   document.getElementById("sys2").textContent = "Dosya borç bilgisi değişmedi.";
 }
 
-async function downloadPdfReceipt({caseId, paymentId, paid, remaining, method}){
+/**
+ * ✅ NO-CORS PDF DOWNLOAD:
+ * Do NOT use fetch() to Apps Script (CORS causes "Failed to fetch").
+ * Open the WebApp URL in a new tab with query params.
+ * Backend should handle: action=generateReceiptPdf (via doGet) and return PDF / redirect.
+ */
+function openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method}){
   if (!BACKEND_URL || BACKEND_URL.includes("PASTE_YOUR_WEBAPP_URL_HERE")) {
     throw new Error("BACKEND_URL tanımlı değil. odeme_sonuc.html içinde BACKEND_URL alanına WebApp URL yapıştırın.");
   }
   if (!caseId) throw new Error("case_id yok");
   if (!paymentId) throw new Error("paymentId yok");
 
-  const payload = {
-    action: "generateReceiptPdf",
-    case_id: caseId,
-    paymentId: paymentId,
-    paid: paid || "",
-    remaining: remaining || "",
-    method: method || "iyzico"
-  };
+  const u = new URL(BACKEND_URL);
+  u.searchParams.set("action", "generateReceiptPdf");
+  u.searchParams.set("case_id", caseId);
+  u.searchParams.set("paymentId", paymentId);
+  u.searchParams.set("paid", paid || "");
+  u.searchParams.set("remaining", remaining || "");
+  u.searchParams.set("method", method || "iyzico");
+  u.searchParams.set("_ts", String(Date.now())); // cache buster
 
-  const res = await fetch(BACKEND_URL, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-
-  const json = await res.json().catch(()=>null);
-  if (!json || !json.ok) {
-    throw new Error((json && (json.error || json.message)) ? (json.error || json.message) : "PDF oluşturulamadı");
-  }
-
-  if (!json.url) throw new Error("PDF url dönmedi");
-
-  // open download in new tab
-  window.open(json.url, "_blank", "noopener,noreferrer");
+  window.open(u.toString(), "_blank", "noopener,noreferrer");
 }
 
 (function init(){
@@ -250,7 +242,10 @@ async function downloadPdfReceipt({caseId, paymentId, paid, remaining, method}){
       btn.disabled = true;
       btn.textContent = "PDF hazırlanıyor...";
       sysErr.style.display = "none";
-      await downloadPdfReceipt({caseId, paymentId, paid, remaining, method});
+
+      // ✅ No fetch, no CORS
+      openPdfReceiptNoCors({caseId, paymentId, paid, remaining, method});
+
       btn.textContent = "Makbuzu İndir (PDF)";
     } catch(err){
       sysErr.style.display = "block";
